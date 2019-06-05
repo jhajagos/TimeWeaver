@@ -1,2 +1,5 @@
 # TimeWeaver
-A generator of multi-sourced sequential data for analytic and machine learning use cases
+
+Is a generator of multi-sourced sequential data for analytic and machine learning use cases. It is designed to read from
+data primarily stored in CSV files and it outputs data in CSV format for analysis.
+

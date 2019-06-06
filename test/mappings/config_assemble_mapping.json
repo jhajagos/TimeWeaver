@@ -23,7 +23,31 @@
   "dynamic":
           [
             {
-
+              "class": "measure",
+              "date_time": {
+                "field_name": "measurement_date_time",
+                "format": "%Y-%m-%d %H:%M:%S.%f"
+              },
+              "source": {
+                "type": "csv",
+                "file_name": "encounters.csv"
+              },
+              "joining_id_field_name": "encounter_id",
+              "value":
+                {
+                  "field_name": "measurement_value",
+                  "type": "numeric"
+                },
+              "additional_fields": [
+                ""
+              ],
+              "label" :
+              {
+                "field_names": ["measurement_code", "measurement_desc"],
+                "filter": [
+                  ["5555-6","blood glucose"],
+                  ["1111-6","creatine"]]
+              }
             }
           ]
 }

@@ -47,6 +47,20 @@ class CSVBlockFile(object):
             raise StopIteration
 
 
+class Block(object):
+    def __init__(self, block, class_config):
+        self.block = block
+        self.class_config = class_config
+
+
+class StaticBlock(Block):
+    pass
+
+
+class DynamicBlock(Block):
+    pass
+
+
 def main(json_file_assembly_mapping, input_directory, output_file_name):
 
     with open(json_file_assembly_mapping, "r") as f:

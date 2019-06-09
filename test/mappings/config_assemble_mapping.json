@@ -17,6 +17,7 @@
             },
             {
               "class": "encounter_details",
+              "type": "additional",
               "field_names": ["encounter_type_code","encounter_type_name","person_id"]
             }
           ],

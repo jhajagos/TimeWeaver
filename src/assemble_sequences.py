@@ -1,6 +1,7 @@
 import csv
 import json
 import argparse
+import datetime
 
 
 class AssembleMappingConfig(object):
@@ -32,7 +33,6 @@ class AssembleMappingConfig(object):
 
     def get_dynamic_class(self, class_name):
         self.config["dynamic"][self._dynamic_positions[class_name]]
-
 
 
 class CSVBlockFile(object):
@@ -79,17 +79,27 @@ class CSVBlockFile(object):
             raise StopIteration
 
 
-
-
 class Block(object):
 
     def __init__(self, block, class_config):
         self.block = block
         self.class_config = class_config
 
+    def _process_time(self):
+        #datetime.strptime(date_string, format)
+        pass
 
-class StaticBlockProcess(Block):
-    pass
+
+class StaticBlockPrimaryProcess(Block):
+    """The primary object must have a datetime field"""
+    def process(self):
+        return None
+
+
+class StaticBlockAdditionalProcess(Block):
+
+    def process(self):
+        return None
 
 
 class DynamicBlockProcess(Block):

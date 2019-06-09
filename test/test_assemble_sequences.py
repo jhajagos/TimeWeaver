@@ -14,11 +14,13 @@ class TestStaticBlock(unittest.TestCase):
 
     def test_static_read(self):
 
-        block_process_obj = []
+        block_process_list_obj = []
         for block in self.block_file_obj:
-            block_process_obj = StaticBlockProcess(block, self.assemble_mapping.get_static_class("encounter_details"))
+            block_process_list_obj += [StaticBlockProcess(block, self.assemble_mapping.get_static_class("encounter_details"))]
 
+        process_result_1 = block_process_list_obj[0].process()
 
+        self.assertIsNotNone(process_result_1)
 
 
 

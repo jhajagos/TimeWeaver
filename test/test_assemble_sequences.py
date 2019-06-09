@@ -1,7 +1,26 @@
 import unittest
+import json
 import pprint
 
-from assemble_sequences import main, CSVBlockFile
+from assemble_sequences import main, CSVBlockFile, StaticBlockProcess, DynamicBlockProcess, AssembleMappingConfig
+
+
+class TestStaticBlock(unittest.TestCase):
+
+    def setUp(self):
+        self.block_file_obj = CSVBlockFile("./data/encounter_details.csv", "encounter_id")
+
+        self.assemble_mapping = AssembleMappingConfig("./mappings/config_assemble_mapping.json")
+
+    def test_static_read(self):
+
+        block_process_obj = []
+        for block in self.block_file_obj:
+            block_process_obj = StaticBlockProcess(block, self.assemble_mapping.get_static_class("encounter_details"))
+
+
+
+
 
 
 class CSVBlockFileTestCase(unittest.TestCase):

@@ -3,6 +3,38 @@ import json
 import argparse
 
 
+class AssembleMappingConfig(object):
+    """Holds the JSON configuration for how files are mapped"""
+
+    def __init__(self, json_assemble_mapping_file_name):
+
+        with open(json_assemble_mapping_file_name) as f:
+            self.config = json.load(f)
+
+        self._build_class_position_mapping()
+
+    def _build_class_position_mapping(self):
+
+        self._static_positions = {}
+        self._dynamic_positions = {}
+
+        i = 0
+        for mapping in self.config["static"]:
+            self._static_positions[mapping["class"]] = i
+            i += 1
+
+        i = 0
+        for mapping in self.config["dynamic"]:
+            self._dynamic_positions[mapping["class"]] = i
+
+    def get_static_class(self, class_name):
+        self.config["static"][self._static_positions[class_name]]
+
+    def get_dynamic_class(self, class_name):
+        self.config["dynamic"][self._dynamic_positions[class_name]]
+
+
+
 class CSVBlockFile(object):
 
     """Class for reading a CSV file into memory. The assumption is that the file is stored """
@@ -47,24 +79,28 @@ class CSVBlockFile(object):
             raise StopIteration
 
 
+
+
 class Block(object):
+
     def __init__(self, block, class_config):
         self.block = block
         self.class_config = class_config
 
 
-class StaticBlock(Block):
+class StaticBlockProcess(Block):
     pass
 
 
-class DynamicBlock(Block):
+class DynamicBlockProcess(Block):
     pass
 
 
 def main(json_file_assembly_mapping, input_directory, output_file_name):
-
     with open(json_file_assembly_mapping, "r") as f:
         assembly_mapping = json.load(f)
+
+
 
 
 if __name__ == "__main__":

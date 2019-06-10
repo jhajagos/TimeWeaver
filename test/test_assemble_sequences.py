@@ -35,6 +35,22 @@ class TestStaticBlock(unittest.TestCase):
         self.assertIsNotNone(prim_result)
 
 
+class TestDynamicBlock(unittest.TestCase):
+
+    def setUp(self):
+        self.dynamic_block_file_obj = CSVBlockFile("./data/measurements.csv", "encounter_id")
+        self.assemble_mapping = AssembleMappingConfig("./mappings/config_assemble_mapping.json")
+
+    def test_dynamic_process(self):
+        dyn_block_process_list_obj = []
+        for dyn_block in self.dynamic_block_file_obj:
+            dyn_block_process_list_obj += [DynamicBlockProcess(dyn_block, self.assemble_mapping.get_dynamic_class("measurement"))]
+
+        processed = [b.process() for b in dyn_block_process_list_obj]
+
+        self.assertIsNotNone(processed[0])
+
+
 class CSVBlockFileTestCase(unittest.TestCase):
     def test_read(self):
 

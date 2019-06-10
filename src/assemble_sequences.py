@@ -68,7 +68,7 @@ class CSVBlockFile(object):
             else:
                 self.past_block_field_value = self.current_block_field_value
                 rows_dict = list(self.rows_buffer)
-                self.rows_buffer = [rows_dict]
+                self.rows_buffer = [row_dict]
                 return rows_dict
 
         if len(self.rows_buffer):
@@ -84,6 +84,9 @@ class Block(object):
     def __init__(self, block, class_config):
         self.class_config = class_config
         self.block = block
+
+    def _config_class(self):
+        self.block_class = self.class_config["class"]
 
     def _config_date_time(self):
         date_time_config = self.class_config["date_time"]
@@ -122,6 +125,8 @@ class Block(object):
                 field_map = self.field_mappings[field_name]
                 if field_map == "int":
                     field_value = int(field_value)
+                elif field_map == "float":
+                    field_value = float(field_value)
 
             field_value_dict[field_name] = field_value
 
@@ -135,17 +140,18 @@ class StaticBlockPrimaryProcess(Block):
         self._config_date_time()
         self._config_primary_id()
         self._config_fields()
+        self.class_config()
 
-        list_to_process = []
+        list_to_return = []
         for item in self.block:
             item_dict = {}
             row_result = self._process_date_time(item)
             item_dict.update(row_result)
             item_dict["id"] = self._process_id(item)
             item_dict["field_values"] = self._process_fields(item)
-            list_to_process += [item_dict]
+            list_to_return += [item_dict]
 
-        return list_to_process
+        return list_to_return
 
 
 class StaticBlockAdditionalProcess(Block):
@@ -153,32 +159,108 @@ class StaticBlockAdditionalProcess(Block):
     def process(self):
         self._config_primary_id()
         self._config_fields()
+        self.class_config()
 
-        list_to_process = []
+        list_to_return = []
         for item in self.block:
+            print(item)
             item_dict = {}
             item_dict["id"] = self._process_id(item)
             item_dict["field_values"] = self._process_fields(item)
-            list_to_process += [item_dict]
+            list_to_return += [item_dict]
 
-        return list_to_process
+        return list_to_return
 
 
 class DynamicBlockProcess(Block):
 
     def _config_additional_fields(self):
         self.field_names = self.class_config["additional_field_names"]
+        self.field_mappings = self.class_config["additional_field_name_mappings"]
 
     def _config_join_id(self):
         self.id_field_name = self.class_config["joining_id_field_name"]
 
+    def _config_filters(self):
+        self.filter = self.class_config["filter"]
+        if self.filter is not None or len(self.filter):
+            self.filter_criteria = self.filter["criteria"]
+            self.filter_field_names = self.filter["field_names"]
+            self.filter_values = self.filter["values"]
+        else:
+            self.filter_criteria = None
+
+    def _config_label(self):
+        config_label = self.class_config["label"]
+
+        self.label_field_names = config_label["field_names"]
+        self.label_join_character = config_label["join_character"]
+
+    def _config_value(self):
+
+        config_value = self.class_config["value"]
+        self.value_field_name = config_value["field_name"]
+        self.value_type = config_value["type"]
+
+    def _process_value(self, item_dict):
+
+        value_process = item_dict[self.value_field_name]
+
+        if self.value_type == "float":
+            value_process = float(value_process)
+        if self.value_type == "int":
+            value_process = int(value_process)
+
+        return {"value": value_process, "value_type": self.value_type}
+
+    def _check_if_matches(self, item_dict):
+
+        if self.filter_criteria is None: # if no filter return
+            return True
+        else:
+            item_value = []
+            for field_name in self.filter_field_names:
+                item_value += [item_dict[field_name]]
+
+            if self.filter_criteria == "or":
+                if item_value in self.filter_values:
+                    return True
+                else:
+                    return False
+            else:
+                return False # Only support or criteria
+
     def process(self):
         self._config_date_time()
+        self._config_join_id()
+        self._config_additional_fields()
+        self._config_filters()
+        self._config_label()
+        self._config_class()
+        self._config_value()
+
+        list_to_return = []
+
+        for item in self.block:
+
+            if self._check_if_matches(item):
+
+                row_dict = self._process_date_time(item)
+                row_dict["id"] = self._process_id(item)
+                row_dict.update(self._process_value(item))
+                row_dict["class"] = self.block_class
+
+                list_to_return += [row_dict]
+
+            else:
+                pass
+
+        list_to_return.sort(key=lambda x: x["unix_epoch_time"])
+        return list_to_return
 
 
 def main(json_file_assembly_mapping, input_directory, output_file_name):
     config_obj = AssembleMappingConfig(json_file_assembly_mapping)
-
 
 
 if __name__ == "__main__":

@@ -4,6 +4,37 @@ import argparse
 import datetime
 
 
+class JsonLineWriter(object):
+    def __init__(self, file_name):
+        self.file_name = file_name
+
+    def __enter__(self):
+        self.fw = open(self.file_name, "w")
+
+    def __exit__(self, exception_type, exception_val, trace):
+        try:
+            self.fw.close()
+        except:
+            raise
+
+    def write(self, obj_serialize):
+        self.fw.write(json.dumps(obj_serialize) + "\n")  # Assumption here is that your strings do not contain any newlines
+
+
+class Assembler(object):
+
+    def __init__(self, assemble_mapping_config, directory, output_file_name):
+        self.assemble_mapping_config = assemble_mapping_config
+        self.directory = directory
+
+    def _initialize(self):
+
+        # All files must exist
+
+        # Open all CSV files
+
+        pass
+
 class AssembleMappingConfig(object):
     """Holds the JSON configuration for how files are mapped"""
 
@@ -271,6 +302,8 @@ class DynamicBlockProcess(Block):
 
 def main(json_file_assembly_mapping, input_directory, output_file_name):
     config_obj = AssembleMappingConfig(json_file_assembly_mapping)
+
+    assembler_obj = Assembler(config_obj, input_directory, output_file_name)
 
 
 if __name__ == "__main__":

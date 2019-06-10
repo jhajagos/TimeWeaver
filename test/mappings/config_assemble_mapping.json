@@ -16,7 +16,7 @@
               "id_field_name": "encounter_id"
             },
             {
-              "class": "encounter_details",
+              "class": "encounter_detail",
               "type": "additional",
               "field_names": ["encounter_type_code","encounter_type_name","person_id"]
             }

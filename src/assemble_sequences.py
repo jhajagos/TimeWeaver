@@ -29,10 +29,10 @@ class AssembleMappingConfig(object):
             self._dynamic_positions[mapping["class"]] = i
 
     def get_static_class(self, class_name):
-        self.config["static"][self._static_positions[class_name]]
+        return self.config["static"][self._static_positions[class_name]]
 
     def get_dynamic_class(self, class_name):
-        self.config["dynamic"][self._dynamic_positions[class_name]]
+        return self.config["dynamic"][self._dynamic_positions[class_name]]
 
 
 class CSVBlockFile(object):
@@ -82,18 +82,41 @@ class CSVBlockFile(object):
 class Block(object):
 
     def __init__(self, block, class_config):
-        self.block = block
         self.class_config = class_config
+        self.block = block
 
-    def _process_time(self):
-        #datetime.strptime(date_string, format)
-        pass
+    def _config_date_time(self):
+        date_time_config = self.class_config["date_time"]
+        self.date_time_field_name = date_time_config["field_name"]
+        self.date_time_format = date_time_config["format"]
+
+    def _process_date_time(self, row_dict):
+
+        date_time_string_value = row_dict[self.date_time_field_name]
+        date_time_value = datetime.datetime.strptime(date_time_string_value, self.date_time_format)
+
+        datetime_dict = {
+            "unix_epoch_time": date_time_value.timestamp(),
+            "original_date_time_value": date_time_string_value
+        }
+
+        return datetime_dict
 
 
 class StaticBlockPrimaryProcess(Block):
     """The primary object must have a datetime field"""
+
     def process(self):
-        return None
+        self._config_date_time()
+
+        list_to_process = []
+        for item in self.block:
+            item_dict = {}
+            row_result = self._process_date_time(item)
+            item_dict.update(row_result)
+            list_to_process += [item_dict]
+
+        return list_to_process
 
 
 class StaticBlockAdditionalProcess(Block):
@@ -103,7 +126,9 @@ class StaticBlockAdditionalProcess(Block):
 
 
 class DynamicBlockProcess(Block):
-    pass
+
+    def process(self):
+        self._config_date_time()
 
 
 def main(json_file_assembly_mapping, input_directory, output_file_name):

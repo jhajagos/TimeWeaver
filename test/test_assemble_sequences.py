@@ -2,27 +2,36 @@ import unittest
 import json
 import pprint
 
-from assemble_sequences import main, CSVBlockFile, StaticBlockProcess, DynamicBlockProcess, AssembleMappingConfig
+from assemble_sequences import main, CSVBlockFile, StaticBlockPrimaryProcess, StaticBlockAdditionalProcess,\
+    DynamicBlockProcess, AssembleMappingConfig
 
 
 class TestStaticBlock(unittest.TestCase):
 
     def setUp(self):
-        self.block_file_obj = CSVBlockFile("./data/encounter_details.csv", "encounter_id")
+        self.additional_block_file_obj = CSVBlockFile("./data/encounter_details.csv", "encounter_id")
+        self.primary_block_file_obj = CSVBlockFile("./data/encounters.csv", "encounter_id")
 
         self.assemble_mapping = AssembleMappingConfig("./mappings/config_assemble_mapping.json")
 
     def test_static_read(self):
 
         block_process_list_obj = []
-        for block in self.block_file_obj:
-            block_process_list_obj += [StaticBlockProcess(block, self.assemble_mapping.get_static_class("encounter_details"))]
+        for block in self.additional_block_file_obj:
+            block_process_list_obj += [StaticBlockAdditionalProcess(block, self.assemble_mapping.get_static_class("encounter_detail"))]
 
         process_result_1 = block_process_list_obj[0].process()
 
         self.assertIsNotNone(process_result_1)
 
+    def test_primary(self):
 
+        block_process_list_obj = []
+        for block in self.primary_block_file_obj:
+            block_process_list_obj += [StaticBlockPrimaryProcess(block, self.assemble_mapping.get_static_class("encounter"))]
+
+        prim_result = block_process_list_obj[0].process()
+        self.assertIsNotNone(prim_result)
 
 
 class CSVBlockFileTestCase(unittest.TestCase):

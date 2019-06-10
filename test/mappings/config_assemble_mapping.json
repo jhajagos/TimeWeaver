@@ -40,8 +40,8 @@
                   "field_name": "measurement_value",
                   "type": "numeric"
                 },
-              "additional_fields": [
-                ""
+              "additional_field_names": [
+                "measurement_value_concept"
               ],
               "label" :
               {

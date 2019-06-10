@@ -123,7 +123,6 @@ class Block(object):
                 if field_map == "int":
                     field_value = int(field_value)
 
-
             field_value_dict[field_name] = field_value
 
         return field_value_dict
@@ -152,10 +151,26 @@ class StaticBlockPrimaryProcess(Block):
 class StaticBlockAdditionalProcess(Block):
 
     def process(self):
-        return None
+        self._config_primary_id()
+        self._config_fields()
+
+        list_to_process = []
+        for item in self.block:
+            item_dict = {}
+            item_dict["id"] = self._process_id(item)
+            item_dict["field_values"] = self._process_fields(item)
+            list_to_process += [item_dict]
+
+        return list_to_process
 
 
 class DynamicBlockProcess(Block):
+
+    def _config_additional_fields(self):
+        self.field_names = self.class_config["additional_field_names"]
+
+    def _config_join_id(self):
+        self.id_field_name = self.class_config["joining_id_field_name"]
 
     def process(self):
         self._config_date_time()
@@ -174,6 +189,6 @@ if __name__ == "__main__":
     arg_parse_obj.add_argument("-i", "--input-directory", dest="input_directory", default="./")
     arg_parse_obj.add_argument("-o", "--output-file-name", dest="output_file_name", default="./assembly_mapping.json.txt")
 
-    arg_obj = arg_parse_obj.parse()
+    arg_obj = arg_parse_obj.parse_args()
 
     main(arg_obj.json_assembly_mapping, arg_obj.input_directory, arg_obj.output_file_name)

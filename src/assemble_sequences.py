@@ -102,18 +102,48 @@ class Block(object):
 
         return datetime_dict
 
+    def _config_primary_id(self):
+        self.id_field_name = self.class_config["id_field_name"]
+
+    def _config_fields(self):
+        self.field_names = self.class_config["field_names"]
+        self.field_mappings = self.class_config["field_mappings"]
+
+    def _process_id(self, row_dict):
+        return row_dict[self.id_field_name]
+
+    def _process_fields(self, item_dict):
+        field_value_dict = {}
+        for field_name in self.field_names:
+
+            field_value = item_dict[field_name]
+
+            if field_name in self.field_mappings:
+                field_map = self.field_mappings[field_name]
+                if field_map == "int":
+                    field_value = int(field_value)
+
+
+            field_value_dict[field_name] = field_value
+
+        return field_value_dict
+
 
 class StaticBlockPrimaryProcess(Block):
     """The primary object must have a datetime field"""
 
     def process(self):
         self._config_date_time()
+        self._config_primary_id()
+        self._config_fields()
 
         list_to_process = []
         for item in self.block:
             item_dict = {}
             row_result = self._process_date_time(item)
             item_dict.update(row_result)
+            item_dict["id"] = self._process_id(item)
+            item_dict["field_values"] = self._process_fields(item)
             list_to_process += [item_dict]
 
         return list_to_process
@@ -132,9 +162,7 @@ class DynamicBlockProcess(Block):
 
 
 def main(json_file_assembly_mapping, input_directory, output_file_name):
-    with open(json_file_assembly_mapping, "r") as f:
-        assembly_mapping = json.load(f)
-
+    config_obj = AssembleMappingConfig(json_file_assembly_mapping)
 
 
 

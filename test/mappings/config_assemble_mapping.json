@@ -8,6 +8,7 @@
                 "format": "%Y-%m-%d %H:%M"
               },
               "field_names": ["discharge_date_time","person_id","gender", "age_at_encounter_start"],
+              "field_mappings": {"age_at_encounter_start": "int", "person_id": "int"},
               "source": {
                 "type": "csv",
                 "file_name": "encounters.csv"

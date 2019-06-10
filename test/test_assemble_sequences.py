@@ -31,6 +31,7 @@ class TestStaticBlock(unittest.TestCase):
             block_process_list_obj += [StaticBlockPrimaryProcess(block, self.assemble_mapping.get_static_class("encounter"))]
 
         prim_result = block_process_list_obj[0].process()
+        print(prim_result)
         self.assertIsNotNone(prim_result)
 
 
@@ -48,6 +49,7 @@ class CSVBlockFileTestCase(unittest.TestCase):
         self.assertEqual(2, len(list_block_obj[1]))
 
         self.assertEqual(1, len(list_block_obj[2]))
+
 
 class AssembleTestCase(unittest.TestCase):
     def test_assemble(self):

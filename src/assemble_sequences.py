@@ -99,7 +99,7 @@ class Block(object):
         date_time_value = datetime.datetime.strptime(date_time_string_value, self.date_time_format)
 
         datetime_dict = {
-            "unix_epoch_time": date_time_value.timestamp(),
+            "unix_time": date_time_value.timestamp(),
             "original_date_time_value": date_time_string_value
         }
 
@@ -140,7 +140,7 @@ class StaticBlockPrimaryProcess(Block):
         self._config_date_time()
         self._config_primary_id()
         self._config_fields()
-        self.class_config()
+        self._config_class()
 
         list_to_return = []
         for item in self.block:
@@ -159,11 +159,10 @@ class StaticBlockAdditionalProcess(Block):
     def process(self):
         self._config_primary_id()
         self._config_fields()
-        self.class_config()
+        self._config_class()
 
         list_to_return = []
         for item in self.block:
-            print(item)
             item_dict = {}
             item_dict["id"] = self._process_id(item)
             item_dict["field_values"] = self._process_fields(item)
@@ -230,6 +229,15 @@ class DynamicBlockProcess(Block):
             else:
                 return False # Only support or criteria
 
+    def _process_label(self, row_dict):
+        label_list = []
+
+        for label_field_name in self.label_field_names:
+            label_list += [row_dict[label_field_name]]
+            label_string = self.label_join_character.join(label_list)
+
+        return {"label_list": label_list, "label_string": label_string}
+
     def process(self):
         self._config_date_time()
         self._config_join_id()
@@ -249,13 +257,15 @@ class DynamicBlockProcess(Block):
                 row_dict["id"] = self._process_id(item)
                 row_dict.update(self._process_value(item))
                 row_dict["class"] = self.block_class
+                row_dict["additional_data"] = self._process_fields(item)
+                row_dict.update(self._process_label(item))
 
                 list_to_return += [row_dict]
 
             else:
                 pass
 
-        list_to_return.sort(key=lambda x: x["unix_epoch_time"])
+        list_to_return.sort(key=lambda x: x["unix_time"])
         return list_to_return
 
 

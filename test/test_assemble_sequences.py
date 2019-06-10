@@ -1,5 +1,4 @@
 import unittest
-import json
 import pprint
 
 from assemble_sequences import main, CSVBlockFile, StaticBlockPrimaryProcess, StaticBlockAdditionalProcess,\
@@ -18,7 +17,8 @@ class TestStaticBlock(unittest.TestCase):
 
         block_process_list_obj = []
         for block in self.additional_block_file_obj:
-            block_process_list_obj += [StaticBlockAdditionalProcess(block, self.assemble_mapping.get_static_class("encounter_detail"))]
+            block_process_list_obj += [StaticBlockAdditionalProcess(block,
+                                                                    self.assemble_mapping.get_static_class("encounter_detail"))]
 
         process_result_1 = block_process_list_obj[0].process()
 
@@ -28,10 +28,10 @@ class TestStaticBlock(unittest.TestCase):
 
         block_process_list_obj = []
         for block in self.primary_block_file_obj:
-            block_process_list_obj += [StaticBlockPrimaryProcess(block, self.assemble_mapping.get_static_class("encounter"))]
+            block_process_list_obj += [StaticBlockPrimaryProcess(block,
+                                                                 self.assemble_mapping.get_static_class("encounter"))]
 
         prim_result = block_process_list_obj[0].process()
-        print(prim_result)
         self.assertIsNotNone(prim_result)
 
 
@@ -48,6 +48,7 @@ class TestDynamicBlock(unittest.TestCase):
 
         processed = [b.process() for b in dyn_block_process_list_obj]
 
+        pprint.pprint(processed)
         self.assertIsNotNone(processed[0])
 
 

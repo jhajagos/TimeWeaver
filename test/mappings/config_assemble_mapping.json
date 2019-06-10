@@ -17,9 +17,11 @@
               "id_field_name": "encounter_id"
             },
             {
+              "id_field_name": "encounter_id",
               "class": "encounter_detail",
               "type": "additional",
-              "field_names": ["encounter_type_code","encounter_type_name","person_id"]
+              "field_names": ["encounter_type_code","encounter_type_name"],
+              "field_mappings": {}
             }
           ],
   "dynamic":
@@ -49,14 +51,48 @@
                 "field_names": ["measurement_code", "measurement_desc"],
                 "join_character": "|"
               },
-              "filter":
-              {
-                "field_names": ["measurement_code", "measurement_desc"],
+              "filter": {
+                "field_names": [
+                  "measurement_code",
+                  "measurement_desc"
+                ],
                 "values": [
-                  ["5555-6","blood glucose"],
-                  ["1111-6","creatine"]],
+                  [
+                    "5555-6",
+                    "blood glucose"
+                  ],
+                  [
+                    "1111-6",
+                    "creatine"
+                  ]
+                ],
                 "criteria": "or"
-
+              }
+            },
+            {
+              "class": "medication",
+              "date_time": {
+                "field_name": "administered_date_time",
+                "format":  "%Y-%m-%d %H:%M:%S.%f"
+              },
+              "source": {
+                "type": "csv",
+                "file_name": "medications.csv"
+              },
+              "joining_id_field_name": "encounter_id",
+              "values": {
+                "field_name": "medication_code",
+                "type": "categorical"
+              },
+              "label" :
+              {
+                "field_names": ["medication_code", "medication_desc"],
+                "join_character": "|"
+              },
+              "filter": {
+                "field_names": [],
+                "values": [],
+                "criteria": null
               }
             }
           ]

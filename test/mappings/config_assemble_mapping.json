@@ -84,20 +84,22 @@
                 "file_name": "medications.csv"
               },
               "joining_id_field_name": "encounter_id",
-              "values": {
+              "value": {
                 "field_name": "medication_code",
                 "type": "categorical"
               },
               "label" :
               {
-                "field_names": ["medication_code", "medication_desc"],
+                "field_names": ["medication_code", "medication_name"],
                 "join_character": "|"
               },
               "filter": {
                 "field_names": [],
                 "values": [],
                 "criteria": null
-              }
+              },
+              "additional_field_names": [],
+             "additional_field_name_mappings": {}
             }
           ]
 }

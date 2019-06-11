@@ -166,9 +166,6 @@ class Assembler(object):
                     except StopIteration:
                         dynamic_finished += [dynamic_name]
 
-
-
-
             if len(result_dict["dynamic"]): # Sort every thing into time order
                 result_dict["dynamic"].sort(key=lambda x: x["unix_time"])
 
@@ -215,6 +212,7 @@ class AssembleMappingConfig(object):
         i = 0
         for mapping in self.config["dynamic"]:
             self._dynamic_positions[mapping["class"]] = i
+            i += 1
 
     def get_static_class(self, class_name):
         return self.config["static"][self._static_positions[class_name]]

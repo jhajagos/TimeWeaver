@@ -38,7 +38,7 @@
               },
               "source": {
                 "type": "csv",
-                "file_name": "encounters.csv"
+                "file_name": "measurements.csv"
               },
               "joining_id_field_name": "encounter_id",
               "value":

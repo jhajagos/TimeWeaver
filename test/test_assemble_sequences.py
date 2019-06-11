@@ -84,7 +84,7 @@ class CSVBlockFileTestCase(unittest.TestCase):
 class AssembleTestCase(unittest.TestCase):
     def test_assemble(self):
 
-        main("./mappings/config_assemble_mapping.json", "./data/", "./output")
+        main("./mappings/config_assemble_mapping.json", "./data/", "./output/test_output_result.json.txt")
 
         self.assertEqual(True, True)
 

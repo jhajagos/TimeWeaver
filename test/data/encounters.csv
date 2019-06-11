@@ -1,4 +1,4 @@
 encounter_id,admit_date_time,discharge_date_time,person_id,gender,age_at_encounter_start
 1,2019-01-20 09:50,2019-01-25 14:50,1,Male,67
 2,2019-02-20 10:22,2019-03-02 16:11,1,Male,68
-3,2019-03-22 10:22,2019-03-24 15:13,1,Female,68
+3,2019-03-22 10:22,2019-03-24 15:13,2,Female,68

@@ -4,21 +4,17 @@ import argparse
 import datetime
 import os
 
+
 class JsonLineWriter(object):
     def __init__(self, file_name):
         self.file_name = file_name
-
-    def __enter__(self):
         self.fw = open(self.file_name, "w")
 
-    def __exit__(self, exception_type, exception_val, trace):
-        try:
-            self.fw.close()
-        except:
-            raise
+    def close(self):
+        self.fw.close()
 
-    def write(self, obj_serialize):
-        self.fw.write(json.dumps(obj_serialize) + "\n")  # Assumption here is that your strings do not contain any newlines
+    def write(self, obj_to_serialize):
+        self.fw.write(json.dumps(obj_to_serialize) + "\n")  # Assumption here is that your strings do not contain any newlines
 
 
 class Assembler(object):
@@ -37,6 +33,8 @@ class Assembler(object):
         self.dynamic_config = {}
 
         self._initialize()
+
+        self.writer = JsonLineWriter(output_file_name)
 
     def _initialize(self):
 
@@ -69,12 +67,16 @@ class Assembler(object):
 
         self.primary_config = self.assemble_mapping_config.get_static_class(self.static_name_primary)
 
-
     def process(self):
 
         class_names = self.static_class_names + self.dynamic_class_names
 
         class_names_dict_id = {c: None for c in class_names}
+
+        static_result = {}
+        static_finished = []
+        dynamic_result = {}
+        dynamic_finished = []
 
         for primary_block in self.static_dict_block[self.static_name_primary]:
             result_dict = {}
@@ -82,22 +84,97 @@ class Assembler(object):
 
             primary_result = primary_obj.process()[0]
             result_dict["primary"] = primary_result
+            result_dict["static"] = {}
+            result_dict["dynamic"] = []
+
             primary_id = primary_result["id"]
 
             class_names_dict_id[self.static_name_primary] = primary_id
 
+            static_id = None
+            dynamic_id = None
+            result_obj = None
             for static_name in self.static_name_additional:
 
-                if class_names_dict_id[static_name] is None:
-                    static_block = self.static_dict_block[static_name].__next__()
-                    static_obj = StaticBlockAdditionalProcess(static_block, self.assemble_mapping_config.get_static_class(static_name))[0]
-                    sobj_p = static_obj.process()
+                if static_name not in static_finished: # Check if we have finished reading the file
 
-                    class_names_dict_id[static_name] = sobj_p["id"]
+                    if class_names_dict_id[static_name] is None: # First time through
+                        static_block = self.static_dict_block[static_name].__next__()
+                        static_objs = StaticBlockAdditionalProcess(static_block, self.assemble_mapping_config.get_static_class(static_name))
+
+                        for static_obj in static_objs.process():
+                            result_obj = static_obj
+
+                        static_id = result_obj["id"]
+                        class_names_dict_id[static_name] = static_id
+                        static_result[static_name] = result_obj
+
+                    if static_id == primary_id: # We have a match
+
+                        result_dict["static"][static_name] = static_result[static_name]
+                        try:
+                            static_block = self.static_dict_block[static_name].__next__()
+                            static_objs = StaticBlockAdditionalProcess(static_block,
+                                                                       self.assemble_mapping_config.get_static_class(
+                                                                           static_name))
+
+                            for static_obj in static_objs.process():
+                                static_result_obj = static_obj
+
+                            static_id = static_result_obj["id"]
+                            class_names_dict_id[static_name] = static_id
+                            static_result[static_name]  = static_result_obj
+
+                        except StopIteration:
+                            static_finished += [static_name]
+
+                    else:
+                        result_dict["static"][static_name] = {}
+                else:
+                    result_dict["static"][static_name] = {}
 
             for dynamic_name in self.dynamic_class_names:
-                pass
+                if dynamic_name not in dynamic_finished:
+                    if class_names_dict_id[dynamic_name] is None:
+                        dynamic_block = self.dynamic_dict_block[dynamic_name].__next__()
 
+                        dynamic_objs = DynamicBlockProcess(dynamic_block, self.assemble_mapping_config.get_dynamic_class(dynamic_name))
+
+                        dynamic_list_result = []
+                        for dynamic_obj in dynamic_objs.process():
+                            dynamic_id = dynamic_obj["id"]
+                            dynamic_list_result += [dynamic_obj]
+
+                        class_names_dict_id[dynamic_name] = dynamic_id
+                        dynamic_result[dynamic_name] = dynamic_list_result
+
+
+                if dynamic_id == primary_id: # Match
+                    result_dict["dynamic"] += dynamic_result[dynamic_name]
+                    try:
+                        dynamic_objs = DynamicBlockProcess(dynamic_block,
+                                                           self.assemble_mapping_config.get_dynamic_class(dynamic_name))
+
+                        dynamic_list_result = []
+                        for dynamic_obj in dynamic_objs.process():
+                            dynamic_id = dynamic_obj["id"]
+                            dynamic_list_result += [dynamic_obj]
+
+                        class_names_dict_id[dynamic_name] = dynamic_id
+                        dynamic_result[dynamic_name] = dynamic_list_result
+
+                    except StopIteration:
+                        dynamic_finished += [dynamic_name]
+
+
+
+
+            if len(result_dict["dynamic"]): # Sort every thing into time order
+                result_dict["dynamic"].sort(key=lambda x: x["unix_time"])
+
+            self.writer.write(result_dict)
+
+        self.writer.close()
         # For other blocks:
 
         # If id is not present  -- left join do not advance
@@ -390,7 +467,6 @@ class DynamicBlockProcess(Block):
 
 def main(json_file_assembly_mapping, input_directory, output_file_name):
     config_obj = AssembleMappingConfig(json_file_assembly_mapping)
-
     assembler_obj = Assembler(config_obj, input_directory, output_file_name)
 
 

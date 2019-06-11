@@ -67,13 +67,36 @@ class Assembler(object):
         self.static_name_additional = [sc for sc in self.static_class_names
                                      if self.assemble_mapping_config.get_static_class(sc)["type"] == "additional"]
 
+        self.primary_config = self.assemble_mapping_config.get_static_class(self.static_name_primary)
 
 
     def process(self):
 
-        # Each crank iterates through the CSV files by a common id
+        class_names = self.static_class_names + self.dynamic_class_names
 
-        # Read and process the static_primary
+        class_names_dict_id = {c: None for c in class_names}
+
+        for primary_block in self.static_dict_block[self.static_name_primary]:
+            result_dict = {}
+            primary_obj = StaticBlockPrimaryProcess(primary_block, self.primary_config)
+
+            primary_result = primary_obj.process()[0]
+            result_dict["primary"] = primary_result
+            primary_id = primary_result["id"]
+
+            class_names_dict_id[self.static_name_primary] = primary_id
+
+            for static_name in self.static_name_additional:
+
+                if class_names_dict_id[static_name] is None:
+                    static_block = self.static_dict_block[static_name].__next__()
+                    static_obj = StaticBlockAdditionalProcess(static_block, self.assemble_mapping_config.get_static_class(static_name))[0]
+                    sobj_p = static_obj.process()
+
+                    class_names_dict_id[static_name] = sobj_p["id"]
+
+            for dynamic_name in self.dynamic_class_names:
+                pass
 
         # For other blocks:
 

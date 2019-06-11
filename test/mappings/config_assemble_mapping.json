@@ -19,6 +19,10 @@
             {
               "id_field_name": "encounter_id",
               "class": "encounter_detail",
+              "source": {
+                "type": "csv",
+                "file_name": "encounter_details.csv"
+              },
               "type": "additional",
               "field_names": ["encounter_type_code","encounter_type_name"],
               "field_mappings": {}

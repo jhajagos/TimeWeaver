@@ -2,7 +2,7 @@ import csv
 import json
 import argparse
 import datetime
-
+import os
 
 class JsonLineWriter(object):
     def __init__(self, file_name):
@@ -23,17 +23,74 @@ class JsonLineWriter(object):
 
 class Assembler(object):
 
+    """
+     The main assumption is that all files are sorted by a single key or id.
+    """
+
     def __init__(self, assemble_mapping_config, directory, output_file_name):
         self.assemble_mapping_config = assemble_mapping_config
         self.directory = directory
+        self.output_file_name = output_file_name
+
+        self.static_primary_config = {}
+        self.static_additional_config = {}
+        self.dynamic_config = {}
+
+        self._initialize()
 
     def _initialize(self):
 
+        self.static_class_names = self.assemble_mapping_config.get_static_classes()
+        self.dynamic_class_names = self.assemble_mapping_config.get_dynamic_classes()
         # All files must exist
 
         # Open all CSV files
 
+        dynamic_dict_file_names = {dc: self.assemble_mapping_config.get_dynamic_class(dc)["source"]["file_name"] for dc in
+                              self.dynamic_class_names}
+
+        static_dict_file_names = {sc: self.assemble_mapping_config.get_static_class(sc)["source"]["file_name"] for sc in
+                              self.static_class_names}
+
+        self.dynamic_dict_block = {dc: CSVBlockFile(os.path.join(self.directory, dynamic_dict_file_names[dc]),
+                                               self.assemble_mapping_config.get_dynamic_class(dc)["joining_id_field_name"]) for dc in
+                                                dynamic_dict_file_names}
+
+        self.static_dict_block = {sc: CSVBlockFile(os.path.join(self.directory, static_dict_file_names[sc]),
+                                                    self.assemble_mapping_config.get_static_class(sc)[
+                                                        "id_field_name"]) for sc in
+                                   static_dict_file_names}
+
+        self.static_name_primary = [sc for sc in self.static_class_names
+                                if self.assemble_mapping_config.get_static_class(sc)["type"] == "primary"][0]
+
+        self.static_name_additional = [sc for sc in self.static_class_names
+                                     if self.assemble_mapping_config.get_static_class(sc)["type"] == "additional"]
+
+
+
+    def process(self):
+
+        # Each crank iterates through the CSV files by a common id
+
+        # Read and process the static_primary
+
+        # For other blocks:
+
+        # If id is not present  -- left join do not advance
+
+        # If id is present - advance and process block
+
+        # Read and process the static_additional
+
+        # Read and process dynamic block
+
+        # Sort the dynamic blocks
+
+        # Write to single line JSON txt file
+
         pass
+
 
 class AssembleMappingConfig(object):
     """Holds the JSON configuration for how files are mapped"""
@@ -64,6 +121,14 @@ class AssembleMappingConfig(object):
 
     def get_dynamic_class(self, class_name):
         return self.config["dynamic"][self._dynamic_positions[class_name]]
+
+    def get_static_classes(self):
+        static_classes = [sc for sc in self.config["static"]]
+        return [sc["class"] for sc in static_classes]
+
+    def get_dynamic_classes(self):
+        dynamic_classes = [sc for sc in self.config["dynamic"]]
+        return [dc["class"] for dc in dynamic_classes]
 
 
 class CSVBlockFile(object):

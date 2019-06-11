@@ -2,7 +2,20 @@ import unittest
 import pprint
 
 from assemble_sequences import main, CSVBlockFile, StaticBlockPrimaryProcess, StaticBlockAdditionalProcess,\
-    DynamicBlockProcess, AssembleMappingConfig
+    DynamicBlockProcess, AssembleMappingConfig, Assembler
+
+
+class TestAssembler(unittest.TestCase):
+
+    def setUp(self):
+        self.assemble_mapping = AssembleMappingConfig("./mappings/config_assemble_mapping.json")
+        self.directory = "./data/"
+        self.output_file_name = "./output/test_output.json.txt"
+
+    def test_assembler(self):
+
+        assembler_obj = Assembler(self.assemble_mapping, self.directory, self.output_file_name)
+        assembler_obj.process()
 
 
 class TestStaticBlock(unittest.TestCase):

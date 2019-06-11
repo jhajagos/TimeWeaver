@@ -1,3 +1,3 @@
 encounter_id,encounter_type_code,encounter_type_name,hash
 1,I,Inpatient,adfdfadad
-2,I,Inpatient,dadfadfad
+2,R,Rehab,dadfadfad

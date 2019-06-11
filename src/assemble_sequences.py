@@ -77,6 +77,8 @@ class Assembler(object):
         static_finished = []
         dynamic_result = {}
         dynamic_finished = []
+        static_id = None
+        dynamic_id = None
 
         for primary_block in self.static_dict_block[self.static_name_primary]:
             result_dict = {}
@@ -91,9 +93,6 @@ class Assembler(object):
 
             class_names_dict_id[self.static_name_primary] = primary_id
 
-            static_id = None
-            dynamic_id = None
-            result_obj = None
             for static_name in self.static_name_additional:
 
                 if static_name not in static_finished: # Check if we have finished reading the file
@@ -103,13 +102,13 @@ class Assembler(object):
                         static_objs = StaticBlockAdditionalProcess(static_block, self.assemble_mapping_config.get_static_class(static_name))
 
                         for static_obj in static_objs.process():
-                            result_obj = static_obj
+                            pass
 
-                        static_id = result_obj["id"]
+                        static_id = static_obj["id"]
                         class_names_dict_id[static_name] = static_id
-                        static_result[static_name] = result_obj
+                        static_result[static_name] = static_obj
 
-                    if static_id == primary_id: # We have a match
+                    if class_names_dict_id[static_name] == primary_id: # We have a match
 
                         result_dict["static"][static_name] = static_result[static_name]
                         try:
@@ -123,7 +122,7 @@ class Assembler(object):
 
                             static_id = static_result_obj["id"]
                             class_names_dict_id[static_name] = static_id
-                            static_result[static_name]  = static_result_obj
+                            static_result[static_name] = static_result_obj
 
                         except StopIteration:
                             static_finished += [static_name]
@@ -142,23 +141,25 @@ class Assembler(object):
 
                         dynamic_list_result = []
                         for dynamic_obj in dynamic_objs.process():
-                            dynamic_id = dynamic_obj["id"]
                             dynamic_list_result += [dynamic_obj]
+                        dynamic_id = dynamic_obj["id"]
 
                         class_names_dict_id[dynamic_name] = dynamic_id
                         dynamic_result[dynamic_name] = dynamic_list_result
 
-
-                if dynamic_id == primary_id: # Match
+                if class_names_dict_id[dynamic_name] == primary_id: # Match
                     result_dict["dynamic"] += dynamic_result[dynamic_name]
                     try:
+                        dynamic_block =  self.dynamic_dict_block[dynamic_name].__next__()
                         dynamic_objs = DynamicBlockProcess(dynamic_block,
                                                            self.assemble_mapping_config.get_dynamic_class(dynamic_name))
 
                         dynamic_list_result = []
                         for dynamic_obj in dynamic_objs.process():
-                            dynamic_id = dynamic_obj["id"]
                             dynamic_list_result += [dynamic_obj]
+
+                        dynamic_id = dynamic_obj["id"]
+                        class_names_dict_id[dynamic_name] = dynamic_id
 
                         class_names_dict_id[dynamic_name] = dynamic_id
                         dynamic_result[dynamic_name] = dynamic_list_result

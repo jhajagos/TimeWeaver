@@ -467,6 +467,7 @@ class DynamicBlockProcess(Block):
 def main(json_file_assembly_mapping, input_directory, output_file_name):
     config_obj = AssembleMappingConfig(json_file_assembly_mapping)
     assembler_obj = Assembler(config_obj, input_directory, output_file_name)
+    assembler_obj.process()
 
 
 if __name__ == "__main__":

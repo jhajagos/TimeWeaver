@@ -100,6 +100,35 @@
               },
               "additional_field_names": [],
              "additional_field_name_mappings": {}
+            },
+            {
+              "class": "vital",
+              "date_time": {
+                "field_name": "vital_measurement_date_time",
+                "format": "%Y-%m-%d %H:%M:%S"
+              },
+              "source": {
+                "type": "csv",
+                "file_name": "vitals.csv"
+              },
+              "joining_id_field_name": "encounter_id",
+              "value":
+                {
+                  "field_name": "vital_measurement_value",
+                  "type": "int"
+                },
+              "additional_field_names": [],
+              "additional_field_name_mappings": {},
+              "label" :
+              {
+                "field_names": ["vital_measurement_code", "vital_measurement_name"],
+                "join_character": "|"
+              },
+              "filter": {
+                "field_names": [],
+                "values": [],
+                "criteria": null
+              }
             }
           ]
 }

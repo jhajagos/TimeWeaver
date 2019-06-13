@@ -19,7 +19,7 @@ def main():
     }
 
     header = ["encounter_id", "vital_measurement_date_time", "vital_measurement_code","vital_measurement_name",
-              "vital_measurment_value"]
+              "vital_measurement_value"]
 
     with open("vitals.csv", newline="", mode="w") as fw:
 

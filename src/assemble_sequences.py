@@ -3,18 +3,7 @@ import json
 import argparse
 import datetime
 import os
-
-
-class JsonLineWriter(object):
-    def __init__(self, file_name):
-        self.file_name = file_name
-        self.fw = open(self.file_name, "w")
-
-    def close(self):
-        self.fw.close()
-
-    def write(self, obj_to_serialize):
-        self.fw.write(json.dumps(obj_to_serialize) + "\n")  # Assumption here is that your strings do not contain any newlines
+from utilities import JsonLineWriter
 
 
 class Assembler(object):
@@ -433,6 +422,9 @@ class DynamicBlockProcess(Block):
 
         return {"label_list": label_list, "label_string": label_string}
 
+    def _process_key(self, label_string, separator="||"):
+        return {"key": self.block_class + separator + label_string}
+
     def process(self):
         self._config_date_time()
         self._config_join_id()
@@ -454,6 +446,7 @@ class DynamicBlockProcess(Block):
                 row_dict["class"] = self.block_class
                 row_dict["additional_data"] = self._process_fields(item)
                 row_dict.update(self._process_label(item))
+                row_dict.update(self._process_key(row_dict["label_string"]))
 
                 list_to_return += [row_dict]
 

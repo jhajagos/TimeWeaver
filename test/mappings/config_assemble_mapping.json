@@ -26,6 +26,17 @@
               "type": "additional",
               "field_names": ["encounter_type_code","encounter_type_name"],
               "field_mappings": {}
+            },
+            {
+              "id_field_name": "encounter_id",
+              "class": "diagnosis",
+              "source": {
+                "type": "csv",
+                "file_name": "encounter_dx.csv"
+              },
+              "type": "additional",
+              "field_names": ["diagnosis_class","diagnosis_code", "diagnosis_desc"],
+              "field_mappings": {}
             }
           ],
   "dynamic":

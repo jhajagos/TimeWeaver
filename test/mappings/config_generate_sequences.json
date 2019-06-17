@@ -1,8 +1,10 @@
 {
   "time_window": 7200,
-  "categorical": {"medication": {"methods": ["cumulative"]}},
+  "categorical": {"medication": "cumulative"},
   "compress": {
     "vital":
       {"methods": ["mean", "min", "max"]}},
-  "static": [["primary","id"], ["primary", "gender"], ["static", ""]]
+  "static": {
+  "independent": [["primary","id"], ["primary", "gender"]],
+  "dependent": [["additional", "diagnosis", "class"]]}
 }

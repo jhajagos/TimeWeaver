@@ -29,6 +29,7 @@ class Assembler(object):
 
         self.static_class_names = self.assemble_mapping_config.get_static_classes()
         self.dynamic_class_names = self.assemble_mapping_config.get_dynamic_classes()
+
         # All files must exist
 
         # Open all CSV files
@@ -90,12 +91,17 @@ class Assembler(object):
                         static_block = self.static_dict_block[static_name].__next__()
                         static_objs = StaticBlockAdditionalProcess(static_block, self.assemble_mapping_config.get_static_class(static_name))
 
+                        static_obj_list = []
                         for static_obj in static_objs.process():
-                            pass
+                            static_obj_list += [static_obj]
 
                         static_id = static_obj["id"]
                         class_names_dict_id[static_name] = static_id
-                        static_result[static_name] = static_obj
+
+                        if len(static_obj_list) > 1:
+                            static_result[static_name] = static_obj_list
+                        else:
+                            static_result[static_name] = static_obj_list[0]
 
                     if class_names_dict_id[static_name] == primary_id: # We have a match
 
@@ -213,6 +219,7 @@ class AssembleMappingConfig(object):
     def get_static_classes(self):
         static_classes = [sc for sc in self.config["static"]]
         return [sc["class"] for sc in static_classes]
+
 
     def get_dynamic_classes(self):
         dynamic_classes = [sc for sc in self.config["dynamic"]]

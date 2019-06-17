@@ -1,6 +1,7 @@
 import json
 import argparse
 from utilities import JsonLineWriter, JsonLineReader
+import pprint
 
 
 class GenerateSequenceConfig(object):
@@ -15,9 +16,47 @@ class GenerateSequenceConfig(object):
     def get_compress_keys(self):
         return list(self.config["compress"].keys())
 
+    def get_categorical_keys(self):
+        return list(self.config["categorical"].keys())
+
+    def get_cumulative_keys(self):
+
+        categorical_keys = self.get_categorical_keys()
+        cumulative_key_list = []
+        for key in categorical_keys:
+            if "cumulative" == self.config["categorical"][key]:
+                cumulative_key_list += [key]
+
+        return cumulative_key_list
+
 
 def process_static_variables(sequence_dict, config_dict):
     return {}
+
+
+def carry_forward(processed_sequence_list, cumulative_list):
+    """Carry forward until a change is observed"""
+    carry_sequence_list = []
+
+    i = 0
+    for item_dict in processed_sequence_list:
+
+        copy_item_dict = item_dict.copy()
+        if i > 0:
+            past_copy_item_dict = carry_sequence_list[-1]
+
+            for key in past_copy_item_dict:
+                if key not in copy_item_dict:
+                    copy_item_dict[key] = past_copy_item_dict[key]
+                elif key in cumulative_list: # We are generating cumulative counts
+                    copy_item_dict[key] += past_copy_item_dict[key]
+                else:
+                    pass # Item exists but not cumulative
+
+        carry_sequence_list += [copy_item_dict]
+        i += 1
+
+    return carry_sequence_list
 
 
 def sequence_generator(sequence_list, config_obj):
@@ -28,6 +67,10 @@ def sequence_generator(sequence_list, config_obj):
     compress_keys = config_obj.get_compress_keys()
     processed_sequence = []
 
+    categorical_keys = config_obj.get_categorical_keys()
+    cumulative_keys_raw = config_obj.get_cumulative_keys()
+    cumulative_keys = []
+
     sequence_dict = {}
     new_sequence_dict = {}
     end_window = None
@@ -35,11 +78,25 @@ def sequence_generator(sequence_list, config_obj):
 
     i = 0
     print("******************")
+
+    pprint.pprint(sequence_list)
+
     for item in sequence_list:
         current_time = item["unix_time"]
         current_key = item["key"]
         current_class = item["class"]
-        current_value = item["value"]
+
+        if current_class in categorical_keys or current_key in categorical_keys:
+            current_value = 1
+            if current_class in cumulative_keys_raw:
+                if current_key not in cumulative_keys:
+                    cumulative_keys += [current_key]
+                else:
+                    if current_key in cumulative_keys_raw:
+                        if current_key not in cumulative_keys:
+                            cumulative_keys += [current_key]
+        else:
+            current_value = item["value"]
 
         if state == "Start":  # Starting a new sequence
             start_time = current_time
@@ -107,10 +164,12 @@ def sequence_generator(sequence_list, config_obj):
     for sequence_dict in processed_sequence:
         sequence_dict["meta"]["time_span"] = sequence_dict["meta"]["end_time"] - sequence_dict["meta"]["start_time"]
 
-    import pprint
-    pprint.pprint(processed_sequence)
+    processed_sequence_dict = {"changes": processed_sequence, "carry_forward": carry_forward(processed_sequence, cumulative_keys)}
 
-    return processed_sequence
+    # pprint.pprint(processed_sequence_dict)
+    # print("*********************************")
+
+    return processed_sequence_dict
 
 
 def static_generator(data_dict, config_obj):

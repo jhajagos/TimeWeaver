@@ -1,5 +1,5 @@
 {
-  "time_window": 3600,
+  "time_window": 7200,
   "categorical": {"medication": {"methods": ["cumulative"]}},
   "compress": {
     "vital":

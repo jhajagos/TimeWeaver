@@ -31,8 +31,10 @@ def sequence_generator(sequence_list, config_obj):
     sequence_dict = {}
     new_sequence_dict = {}
     end_window = None
+    past_time = None
 
     i = 0
+    print("******************")
     for item in sequence_list:
         current_time = item["unix_time"]
         current_key = item["key"]
@@ -40,11 +42,17 @@ def sequence_generator(sequence_list, config_obj):
         current_value = item["value"]
 
         if state == "Start":  # Starting a new sequence
-            start_time = item["unix_time"]
-            start_window = start_time
+            start_time = current_time
             end_window = start_time + config_obj.get_time_window_size()
-
             state = "Process"
+
+        if current_time > end_window:
+            if current_key in compress_keys or current_class in compress_keys:
+                new_sequence_dict = {current_key: [current_value]}
+            else:
+                new_sequence_dict = {current_key: current_value}
+
+            state = "End"
 
         if state == "Process":
 
@@ -62,28 +70,42 @@ def sequence_generator(sequence_list, config_obj):
 
                 else: # Key exists so we are going to generate another sequence
                     new_sequence_dict = {current_key: current_value}
+                    start_time = current_time
                     state = "End"
-
-            if current_time > end_window:
-
-                if current_key in compress_keys or current_class in compress_keys:
-                    new_sequence_dict = {current_key: [current_value]}
-                else:
-                    new_sequence_dict = {current_key: current_value}
-
-                state = "End"
 
         if state == "End":
 
-            processed_sequence += [sequence_dict]
+            sequence_dict["meta"] = {}
+            sequence_dict["meta"]["start_time"] = start_time
+            sequence_dict["meta"]["end_time"] = past_time
+            sequence_dict["meta"]["sequence_i"] = sequence_i
+            sequence_dict["meta"]["i"] = i
+
+            processed_sequence += [sequence_dict.copy()]
             sequence_i += 1
 
-            sequence_dict = new_sequence_dict
-            state = "Start"
+            sequence_dict = new_sequence_dict.copy()
+            new_sequence_dict = {}
+            state = "Process"
 
+            start_time = current_time
+            end_window = start_time + config_obj.get_time_window_size()
+
+        past_time = current_time
         i += 1
 
-    # Add sequences
+    if state == "Process": # We hit the end
+        sequence_dict["meta"] = {}
+        sequence_dict["meta"]["start_time"] = start_time
+        sequence_dict["meta"]["end_time"] = current_time
+        sequence_dict["meta"]["sequence_i"] = sequence_i
+        sequence_dict["meta"]["i"] = i
+
+        processed_sequence += [sequence_dict.copy()]
+        state = "End"
+
+    for sequence_dict in processed_sequence:
+        sequence_dict["meta"]["time_span"] = sequence_dict["meta"]["end_time"] - sequence_dict["meta"]["start_time"]
 
     import pprint
     pprint.pprint(processed_sequence)

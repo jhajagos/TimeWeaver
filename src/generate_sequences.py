@@ -1,7 +1,6 @@
 import json
 import argparse
 from utilities import JsonLineWriter, JsonLineReader
-import pprint
 
 
 class GenerateSequenceConfig(object):
@@ -29,9 +28,8 @@ class GenerateSequenceConfig(object):
 
         return cumulative_key_list
 
-
-def process_static_variables(sequence_dict, config_dict):
-    return {}
+    def get_static_mappings(self):
+        return self.config["static"]
 
 
 def carry_forward(processed_sequence_list, cumulative_list):
@@ -77,9 +75,6 @@ def sequence_generator(sequence_list, config_obj):
     past_time = None
 
     i = 0
-    print("******************")
-
-    pprint.pprint(sequence_list)
 
     for item in sequence_list:
         current_time = item["unix_time"]
@@ -166,14 +161,61 @@ def sequence_generator(sequence_list, config_obj):
 
     processed_sequence_dict = {"changes": processed_sequence, "carry_forward": carry_forward(processed_sequence, cumulative_keys)}
 
-    # pprint.pprint(processed_sequence_dict)
-    # print("*********************************")
-
     return processed_sequence_dict
 
 
-def static_generator(data_dict, config_obj):
-    return {}
+def get_dict_value(data_dict, key_list):
+
+    key_data_dict = data_dict
+    last_key = key_list[-1]
+
+    try:
+        for key in key_list:
+            if key_data_dict.__class__ == {}.__class__:
+                if "field_values" in key_data_dict:
+                    key_data_dict = key_data_dict["field_values"]
+                else:
+                    key_data_dict = key_data_dict[key]
+
+                if last_key == key:
+                    return key_data_dict[key]
+
+            else:
+                return [it["field_values"][key] for it in key_data_dict]
+    except KeyError:
+        return None
+
+
+def static_generator(data_dict, config_obj, separator="_"):
+
+    static_dict = {}
+    static_dict["id"] = data_dict["primary"]["id"]
+
+    static_mappings = config_obj.get_static_mappings()
+    key_mappings = [k for k in static_mappings]
+
+    for key in key_mappings:
+        static_dict[key] = {}
+
+
+    for key in key_mappings:
+        keys_lists = static_mappings[key]
+        for key_list in keys_lists:
+            joined_key_str = separator.join(key_list)
+            static_dict[key][joined_key_str] = get_dict_value(data_dict, key_list)
+    # print(static_dict)
+    return static_dict
+
+
+def sequence_record_generator(record_dict, config_obj):
+
+    dict_record = {}
+    static_record_dict = static_generator(record_dict, config_obj)
+    dict_record.update(static_record_dict)
+    dynamic_record_dict = sequence_generator(record_dict["dynamic"], config_obj)
+    dict_record.update(dynamic_record_dict)
+
+    return dynamic_record_dict
 
 
 def main(config, input_json_txt_file, output_file_name):
@@ -183,9 +225,8 @@ def main(config, input_json_txt_file, output_file_name):
     line_writer = JsonLineWriter(output_file_name)
 
     # Static
-
     for sequence_dict in JsonLineReader(input_json_txt_file):
-        line_writer.write(sequence_generator(sequence_dict["dynamic"], config_obj))
+        line_writer.write(sequence_record_generator(sequence_dict, config_obj))
 
     line_writer.close()
 
@@ -200,41 +241,3 @@ if __name__ == "__main__":
 
     main(arg_parse_obj.json_config_file, arg_parse_obj.input_file_name, arg_parse_obj.output_file_name)
 
-"""
-
-Sequence generation for specific encounter:
-{
-"time_window": 3600, # specified in seconds
-"categorical": {"medication": {"methods": ["cumulative"]}},
-"compress": {"vital": {"methods": ["mean", "min", "max"]}}
-"static": [["primary","id"], ["primary", "gender"]] 
-}
-
-state transition
-
-start
-process
-end
-
-first event -> start
-
-set start time
-
-process
-
-keep accumulating events into list
-
-if we hit a non-compress event of the same class and label
-then create a new sequence
-
-if hit end
-
-once list 
-
-sequence_id,
-start_time,
-end_time,
-label
-
-pass
-"""

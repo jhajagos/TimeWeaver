@@ -5,6 +5,7 @@
     "vital":
       {"methods": ["mean", "min", "max"]}},
   "static": {
-  "independent": [["primary","id"], ["primary", "gender"]],
-  "dependent": [["additional", "diagnosis", "class"]]}
+  "identifier": [["primary", "person_id"]],
+  "independent": [["primary", "gender"], ["primary", "age_at_encounter_start"]],
+  "dependent": [["static", "diagnosis", "diagnosis_class"]]}
 }

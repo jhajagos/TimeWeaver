@@ -3,8 +3,8 @@ encounter_id,measurement_date_time,measurement_code,measurement_desc,measurement
 1,2019-01-20 13:05:10.2,5555-6,blood glucose,243,high
 1,2019-01-20 15:06:10.6,5555-6,blood glucose,90,normal
 1,2019-01-20 19:55:36.6,5555-6,blood glucose,60,low
-1,2019-01-20 12:05:06.0,1111-6,creatine,0.7,normal
+1,2019-01-20 12:05:06.0,1111-6,creatinine,0.7,normal
 1,2019-01-20 12:06:06,6666-5,troponin,0.0,normal
 2,2019-02-20 15:00:02.0,5555-6,blood glucose,265,high
 2,2019-02-20 15:05:10.2,5555-6,blood glucose,250,high
-3,2019-01-20 12:05:06.0,1111-6,creatine,0.7,normal
+3,2019-01-20 12:05:06.0,1111-6,creatinine,0.7,normal

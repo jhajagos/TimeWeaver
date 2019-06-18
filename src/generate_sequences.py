@@ -197,7 +197,6 @@ def static_generator(data_dict, config_obj, separator="_"):
     for key in key_mappings:
         static_dict[key] = {}
 
-
     for key in key_mappings:
         keys_lists = static_mappings[key]
         for key_list in keys_lists:
@@ -215,7 +214,7 @@ def sequence_record_generator(record_dict, config_obj):
     dynamic_record_dict = sequence_generator(record_dict["dynamic"], config_obj)
     dict_record.update(dynamic_record_dict)
 
-    return dynamic_record_dict
+    return dict_record
 
 
 def main(config, input_json_txt_file, output_file_name):

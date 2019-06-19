@@ -130,8 +130,6 @@ class CSVWriter(object):
 
         self._add_meta_data_header()
 
-
-
     def _define_mapping_dicts(self):
         keys = self.scan_obj.get_subject_keys(self.subject)
 
@@ -173,8 +171,8 @@ class StaticCSVWriter(CSVWriter):
 
 class DynamicCSVWriter(CSVWriter):
 
-    def write(self, object_dict):
-        self._write(object_dict, "dynamic")
+    def write(self, id_value, object_dict):
+        self._write(id_value, object_dict, "dynamic")
 
     def _add_meta_data_columns(self):
         i = self.number_of_data_columns
@@ -324,11 +322,22 @@ def generate_csv_files(input_file_json_txt, directory, base_name):
     static_csv_obj_dict = {ss: StaticCSVWriter(ss, static_csv_file_names_dict[ss], scan_obj) for ss in static_subjects}
     dynamic_csv_obj_dict = {ds: DynamicCSVWriter(ds, dynamic_csv_file_names_dict[ds], scan_obj) for ds in dynamic_subjects}
 
+    data_reader = JsonLineReader(input_file_json_txt)
 
+    for data_dict in data_reader:
+        subjects = [k for k in list(data_dict.keys()) if k != "id"]
+        id_value = data_dict["id"]
 
+        for subject in subjects:
+
+            if subject in static_csv_obj_dict:
+                static_csv_obj_dict[subject].write(id_value, data_dict[subject])
+            elif subject in dynamic_csv_obj_dict:
+                dynamic_csv_obj_dict[subject].write(id_value, data_dict[subject])
 
 def generate_hdf5_files(input_file_json_txt, directory, base_name):
-    pass
+
+    print("Feature is currently not implemented")
 
 
 def main(input_file_json_txt, command, directory, base_name):

@@ -25,7 +25,7 @@ import csv
 
 class CSVWriter(object):
 
-    def __init__(self, subject, file_name, scan_obj, separator="|"):
+    def __init__(self, subject, file_name, scan_obj, separator="|", numeric_functions=["_mean", "_min", "_max"]):
 
         self.subject = subject
         self.file_name = file_name
@@ -34,15 +34,103 @@ class CSVWriter(object):
         self.fw = open(self.file_name, "w")
         self.csv_writer = csv.writer(self.fw)
 
+        self.numeric_functions = numeric_functions
         self.separator = separator
         self._define_subject()
         self._define_data_columns()
+
+
+        self.csv_writer.writerow(self.header)
+
+    def _add_meta_data_columns(self):
+        pass
+
+    def _add_meta_data_header(self):
+        pass
 
     def _define_subject(self):
         self.subject_dict = self.scan_obj.get_subject(self.subject)
 
     def _define_data_columns(self):
         self._define_mapping_dicts()
+
+        self.column_positions = {"id": [0]}  # ID is always column 0
+
+        # Order of columns
+
+        i = 1
+
+        for key in sorted(self.numeric_dict):
+            self.column_positions[key] = [i]
+            i += 1
+
+        j = i
+        for key in sorted(self.numeric_list_dict):
+
+            data_keys = self.numeric_list_dict[key]
+            number_of_data_keys = len(data_keys)
+            self.column_positions[key] = [0] * number_of_data_keys
+            for data_key in data_keys:
+                position = data_keys[data_key]
+                self.column_positions[key][position] = j + position
+
+            j += number_of_data_keys
+
+        k = j
+        for key in sorted(self.categorical_dict):
+
+            data_keys = self.categorical_dict[key]
+            number_of_data_keys = len(data_keys)
+            self.column_positions[key] = [0] * number_of_data_keys
+            for data_key in data_keys:
+                position = data_keys[data_key]
+                self.column_positions[key][position] = k + position
+            k += number_of_data_keys
+
+        self.number_of_data_columns = k
+        self.number_of_columns = k
+
+        self._add_meta_data_columns()
+
+        self.header = [''] * self.number_of_columns
+        self.header[0] = "id"
+
+        i = 1
+        for key in sorted(self.numeric_dict.keys()):
+            self.header[i] = key
+            i += 1
+
+        for key in sorted(self.numeric_list_dict):
+            data_keys = self.numeric_list_dict[key]
+            z = 0
+            key_list = []
+            for data_key in data_keys:
+                key_list += [(z, data_key)]
+                z += 1
+
+            key_list.sort(key=lambda x: x[0])
+
+            starting_position = self.column_positions[key][0]
+
+            for item in key_list:
+                self.header[starting_position + item[0]] = key + self.separator + str(item[1][1:])
+
+        for key in sorted(self.categorical_dict):
+            data_keys = self.categorical_dict[key]
+            z = 0
+            key_list = []
+            for data_key in data_keys:
+                key_list += [(z, data_key)]
+                z += 1
+            key_list.sort(key=lambda x: x[0])
+            starting_position = self.column_positions[key][0]
+
+            for item in key_list:
+                self.header[starting_position + item[0]] = key + self.separator + str(item[1])
+
+        self._add_meta_data_header()
+
+
 
     def _define_mapping_dicts(self):
         keys = self.scan_obj.get_subject_keys(self.subject)
@@ -55,7 +143,7 @@ class CSVWriter(object):
             subject_value_key = self.subject_dict[key]
             if subject_value_key.__class__ == [].__class__:
                 if len(subject_value_key):
-                    if subject_value_key[0].__class__ in (int, float):
+                    if subject_value_key[0] in self.numeric_functions:
                         i = 0
                         self.numeric_list_dict[key] = {}
                         for sub_key in subject_value_key:
@@ -69,13 +157,6 @@ class CSVWriter(object):
                             i += 1
             else:
                 self.numeric_dict[key] = subject_value_key
-
-        print(self.categorical_dict)
-        print(self.numeric_list_dict)
-        print(self.numeric_dict)
-
-    def _def_define_numeric_list_dict(self):
-        pass
 
     def _write(self, id_value, object_dict, subject_type):
         pass
@@ -94,6 +175,21 @@ class DynamicCSVWriter(CSVWriter):
 
     def write(self, object_dict):
         self._write(object_dict, "dynamic")
+
+    def _add_meta_data_columns(self):
+        i = self.number_of_data_columns
+        self.column_positions["_sequence_i"] = [i]
+        i += 1
+        self.column_positions["_start_time"] = [i]
+        i += 1
+        self.column_positions["_time_span"] = [i]
+
+        self.number_of_columns = i + 1
+
+    def _add_meta_data_header(self):
+        self.header[-1] = "_time_span"
+        self.header[-2] = "_start_time"
+        self.header[-3] = "_sequence_i"
 
 
 def mean(numeric_list):
@@ -128,7 +224,7 @@ class ClassScan(object):
         return list(self.get_subject(subject_name).keys())
 
 
-def scan_file(input_file_json_txt, directory, numeric_compress_functions=["mean", "min"]):
+def scan_file(input_file_json_txt, directory, numeric_compress_functions=["_mean", "_min", "_max"]):
 
     keys_to_ignore = ["id", "meta"]
 

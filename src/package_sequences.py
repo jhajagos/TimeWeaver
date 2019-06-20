@@ -171,30 +171,31 @@ class CSVWriter(object):
             for key in keys:
                 data_value = object_dict[key]
 
-                data_positions = self.column_positions[key]
-                if key in self.numeric_dict:
-                    row_to_write[data_positions[0]] = str(data_value)
-                elif key in self.numeric_list_dict:
-                    operations = self.numeric_list_dict[key]
+                if key in self.column_positions:
+                    data_positions = self.column_positions[key]
+                    if key in self.numeric_dict:
+                        row_to_write[data_positions[0]] = str(data_value)
+                    elif key in self.numeric_list_dict:
+                        operations = self.numeric_list_dict[key]
 
-                    for operation_key in operations:
-                        if operation_key == "_mean":
-                            row_to_write[data_positions[0] + operations[operation_key]] = mean(data_value)
-                        elif operation_key == "_min":
-                            row_to_write[data_positions[0] + operations[operation_key]] = min(data_value)
-                        elif operation_key == "_max":
-                            row_to_write[data_positions[0] + operations[operation_key]] = max(data_value)
+                        for operation_key in operations:
+                            if operation_key == "_mean":
+                                row_to_write[data_positions[0] + operations[operation_key]] = mean(data_value)
+                            elif operation_key == "_min":
+                                row_to_write[data_positions[0] + operations[operation_key]] = min(data_value)
+                            elif operation_key == "_max":
+                                row_to_write[data_positions[0] + operations[operation_key]] = max(data_value)
 
-                elif key in self.categorical_dict:
+                    elif key in self.categorical_dict:
 
-                    for data_position in data_positions:
-                        row_to_write[data_position] = 0
+                        for data_position in data_positions:
+                            row_to_write[data_position] = 0
 
-                    if data_value.__class__ != [].__class__:
-                        data_value = [data_value]
+                        if data_value.__class__ != [].__class__:
+                            data_value = [data_value]
 
-                    for datum in data_value:
-                        row_to_write[data_positions[0] + self.categorical_dict[key][datum]] = 1
+                        for datum in data_value:
+                            row_to_write[data_positions[0] + self.categorical_dict[key][datum]] = 1
 
             if subject_type == "dynamic":
                 row_to_write[-3] = str(object_dict["meta"]["sequence_i"])
@@ -403,3 +404,5 @@ if __name__ == "__main__":
     arg_parse_obj.add_argument("-d", "--directory", dest="directory", default="./", help="Directory to write files to")
 
     arg_obj = arg_parse_obj.parse_args()
+
+    main(arg_obj.input_file_json_txt, arg_obj.command, arg_obj.directory, arg_obj.base_name)

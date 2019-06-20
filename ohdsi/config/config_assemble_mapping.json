@@ -1,0 +1,85 @@
+{
+  "static": [
+    {
+              "class": "visit",
+              "date_time": {
+                "field_name": "visit_start_datetime",
+                "format": "%Y-%m-%d %H:%M:%S"
+              },
+              "field_names": ["person_id", "visit_start_datetime","visit_start_datetime", "age_at_visit_start_in_years_int",
+                "visit_type_concept_id", "visit_concept_name", "care_site_name"],
+              "field_mappings": {"age_at_visit_start_in_years_int": "int", "person_id": "int"},
+              "source": {
+                "type": "csv",
+                "file_name": "visit.csv"
+              },
+              "type": "primary",
+              "id_field_name": "visit_occurrence_id"
+    },
+    {
+            "id_field_name": "visit_occurrence_id",
+            "class": "visit_person",
+            "source": {
+              "type": "csv",
+              "file_name": "visit_person.csv"
+            },
+            "type": "additional",
+            "field_names": [
+              "gender_concept_name", "race_concept_name"
+            ],
+            "field_mappings": {}
+    },
+    {
+            "id_field_name": "visit_occurrence_id",
+            "class": "condition",
+            "source": {
+              "type": "csv",
+              "file_name": "condition.csv"
+            },
+            "type": "additional",
+            "field_names": [
+              "condition_concept_name", "condition_concept_code"
+            ],
+            "field_mappings": {}
+    }],
+    "dynamic":
+          [
+            {
+              "class": "measurement",
+              "date_time": {
+                "field_name": "measurement_datetime",
+                "format": "%Y-%m-%d %H:%M:%S"
+              },
+              "source": {
+                "type": "csv",
+                "file_name": "measurement.csv"
+              },
+              "joining_id_field_name": "visit_occurrence_id",
+              "value":
+                {
+                  "field_name": "value_as_number",
+                  "type": "float"
+                },
+              "additional_field_names": [
+                 "unit_source_value", "range_low", "range_high", "value_as_concept_name"
+              ],
+              "additional_field_name_mappings": {},
+              "label" :
+              {
+                "field_names": ["measurement_source_concept_id", "measurement_source_value"],
+                "join_character": "|"
+              },
+              "filter": {
+                "field_names": [
+                  "measurement_source_concept_id",
+                  "measurement_source_value"
+                ],
+                "values": [
+                ],
+                "criteria": null
+              }
+            }
+
+  ]
+
+}

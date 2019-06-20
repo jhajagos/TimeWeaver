@@ -31,14 +31,13 @@ class CSVWriter(object):
         self.file_name = file_name
         self.scan_obj = scan_obj
 
-        self.fw = open(self.file_name, "w")
+        self.fw = open(self.file_name, mode="w", newline="")
         self.csv_writer = csv.writer(self.fw)
 
         self.numeric_functions = numeric_functions
         self.separator = separator
         self._define_subject()
         self._define_data_columns()
-
 
         self.csv_writer.writerow(self.header)
 
@@ -156,8 +155,53 @@ class CSVWriter(object):
             else:
                 self.numeric_dict[key] = subject_value_key
 
-    def _write(self, id_value, object_dict, subject_type):
-        pass
+    def _write(self, id_value, objects_dict, subject_type):
+
+        keys_to_ignore = ["id", "meta"]
+
+        row_template = [''] * self.number_of_columns
+        row_template[0] = id_value
+
+        if objects_dict.__class__ != [].__class__:
+            objects_dict = [objects_dict]
+
+        for object_dict in objects_dict:
+            keys = [k for k in object_dict.keys() if k not in keys_to_ignore]
+            row_to_write = list(row_template)
+            for key in keys:
+                data_value = object_dict[key]
+
+                data_positions = self.column_positions[key]
+                if key in self.numeric_dict:
+                    row_to_write[data_positions[0]] = str(data_value)
+                elif key in self.numeric_list_dict:
+                    operations = self.numeric_list_dict[key]
+
+                    for operation_key in operations:
+                        if operation_key == "_mean":
+                            row_to_write[data_positions[0] + operations[operation_key]] = mean(data_value)
+                        elif operation_key == "_min":
+                            row_to_write[data_positions[0] + operations[operation_key]] = min(data_value)
+                        elif operation_key == "_max":
+                            row_to_write[data_positions[0] + operations[operation_key]] = max(data_value)
+
+                elif key in self.categorical_dict:
+                    print(key)
+                    for data_position in data_positions:
+                        row_to_write[data_position] = 0
+
+                    if data_value.__class__ != [].__class__:
+                        data_value = [data_value]
+
+                    for datum in data_value:
+                        row_to_write[data_positions[0] + self.categorical_dict[key][datum]] = 1
+
+            if subject_type == "dynamic":
+                row_to_write[-3] = str(object_dict["meta"]["sequence_i"])
+                row_to_write[-2] = str(object_dict["meta"]["start_time"])
+                row_to_write[-1] = str(object_dict["meta"]["time_span"])
+
+            self.csv_writer.writerow(row_to_write)
 
     def close(self):
         self.fw.close()
@@ -335,8 +379,8 @@ def generate_csv_files(input_file_json_txt, directory, base_name):
             elif subject in dynamic_csv_obj_dict:
                 dynamic_csv_obj_dict[subject].write(id_value, data_dict[subject])
 
-def generate_hdf5_files(input_file_json_txt, directory, base_name):
 
+def generate_hdf5_files(input_file_json_txt, directory, base_name):
     print("Feature is currently not implemented")
 
 

@@ -73,10 +73,12 @@ def sequence_generator(sequence_list, config_obj):
     new_sequence_dict = {}
     end_window = None
     past_time = None
+    start_time = None
 
     i = 0
 
     for item in sequence_list:
+
         current_time = item["unix_time"]
         current_key = item["key"]
         current_class = item["class"]
@@ -122,7 +124,7 @@ def sequence_generator(sequence_list, config_obj):
 
                 else: # Key exists so we are going to generate another sequence
                     new_sequence_dict = {current_key: current_value}
-                    start_time = current_time
+                    # start_time = current_time
                     state = "End"
 
         if state == "End":

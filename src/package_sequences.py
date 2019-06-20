@@ -186,7 +186,7 @@ class CSVWriter(object):
                             row_to_write[data_positions[0] + operations[operation_key]] = max(data_value)
 
                 elif key in self.categorical_dict:
-                    print(key)
+
                     for data_position in data_positions:
                         row_to_write[data_position] = 0
 

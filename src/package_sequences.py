@@ -274,13 +274,18 @@ def scan_file(input_file_json_txt, directory, numeric_compress_functions=["_mean
     line_reader_obj = JsonLineReader(input_file_json_txt)
     values_dict = {}
     count_dict = {}
+    count_id_dict = {}
+
+
     histogram_sequence_dict = {}
 
     # Collect distribution of sequence
 
+    z = 0
     for data_dict in line_reader_obj:
 
         subject_keys = [sk for sk in data_dict if sk not in keys_to_ignore]
+        count_id_data_dict = {}
 
         for subject_key in subject_keys:
             subjects = data_dict[subject_key]
@@ -298,6 +303,7 @@ def scan_file(input_file_json_txt, directory, numeric_compress_functions=["_mean
             if subject_key not in values_dict:
                 values_dict[subject_key] = {}
                 count_dict[subject_key] = {}
+                count_id_dict[subject_key] = {}
 
             for subject in subjects:
 
@@ -312,6 +318,8 @@ def scan_file(input_file_json_txt, directory, numeric_compress_functions=["_mean
                                 if item_key not in values_dict[subject_key]:
                                     values_dict[subject_key][item_key] = numeric_compress_functions
                                     count_dict[subject_key][item_key] = 1
+                                    count_id_data_dict[subject_key][item_key] = 1
+
                                 else:
                                     count_dict[subject_key][item_key] += 1
                             else:
@@ -334,12 +342,15 @@ def scan_file(input_file_json_txt, directory, numeric_compress_functions=["_mean
                                 elif subject_item_key.__class__ == int:
                                     values_dict[subject_key][item_key] = "int"
                             count_dict[subject_key][item_key] = 1
+                            count_dict[subject_key][item_key] = 1
                         else:
                             value_subject_item_key = values_dict[subject_key][item_key]
                             if value_subject_item_key.__class__ == [].__class__:
                                 if subject_item_key not in value_subject_item_key:
                                     values_dict[subject_key][item_key] += [subject_item_key]
                             count_dict[subject_key][item_key] += 1
+        z += 1
+
 
     export_dict = {}
     export_dict["histogram"] = histogram_sequence_dict

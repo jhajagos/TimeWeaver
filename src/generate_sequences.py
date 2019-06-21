@@ -57,7 +57,7 @@ def carry_forward(processed_sequence_list, cumulative_list):
     return carry_sequence_list
 
 
-def sequence_generator(sequence_list, config_obj):
+def sequence_generator(sequence_list, config_obj, sequence_start_time):
 
     state = "Start" # scan | start | process | end
 
@@ -131,6 +131,7 @@ def sequence_generator(sequence_list, config_obj):
 
             sequence_dict["meta"] = {}
             sequence_dict["meta"]["start_time"] = start_time
+            sequence_dict["meta"]["sequence_time_delta"] = start_time - sequence_start_time
             sequence_dict["meta"]["end_time"] = past_time
             sequence_dict["meta"]["sequence_i"] = sequence_i
             sequence_dict["meta"]["i"] = i
@@ -213,7 +214,7 @@ def sequence_record_generator(record_dict, config_obj):
     dict_record = {}
     static_record_dict = static_generator(record_dict, config_obj)
     dict_record.update(static_record_dict)
-    dynamic_record_dict = sequence_generator(record_dict["dynamic"], config_obj)
+    dynamic_record_dict = sequence_generator(record_dict["dynamic"], config_obj, record_dict["primary"]["unix_time"])
     dict_record.update(dynamic_record_dict)
 
     return dict_record

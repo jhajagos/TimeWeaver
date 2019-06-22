@@ -1,15 +1,18 @@
 """
     Modes:
-        Scan:
+        scan:
             Must be run first
             Generates positional mappings
             expanded categorical variables
 
-        Output CSV
-            dynamics
-            static - maps
+        csv:
+            Outputs sequences into CSV files
+            dynamic
+            static
 
-        Output data to HDF5
+        hdf5:
+            Output data to structured HDF5 format
+            Must be run after csv
             zero padding for ending
             maximum number of steps
 
@@ -56,6 +59,7 @@ class CSVWriter(object):
         self.column_positions = {"id": [0], "_i_id": [1]}  # ID is always column 0
 
         # Order of columns
+        self.data_columns = []
 
         i = 2
 
@@ -65,7 +69,6 @@ class CSVWriter(object):
 
         j = i
         for key in sorted(self.numeric_list_dict):
-
             data_keys = self.numeric_list_dict[key]
             number_of_data_keys = len(data_keys)
             self.column_positions[key] = [0] * number_of_data_keys
@@ -75,7 +78,9 @@ class CSVWriter(object):
 
             j += number_of_data_keys
 
+
         k = j
+        data_keys = []
         for key in sorted(self.categorical_dict):
 
             data_keys = self.categorical_dict[key]
@@ -90,7 +95,6 @@ class CSVWriter(object):
         self.number_of_columns = k
 
         self._add_meta_data_columns()
-
         self.header = [''] * self.number_of_columns
         self.header[0] = "id"
         self.header[1] = "_i_id"
@@ -129,6 +133,15 @@ class CSVWriter(object):
                 self.header[starting_position + item[0]] = key + self.separator + str(item[1])
 
         self._add_meta_data_header()
+
+        if "_sequence_i" in self.header:
+            self.data_columns = self.header[2:-4]
+            self.meta_data_columns = self.header[-4:]
+        else:
+            self.data_columns = self.header[2:]
+            self.meta_data_columns = []
+
+        self.id_columns = self.header[0:2]
 
     def _define_mapping_dicts(self):
         keys = self.scan_obj.get_subject_keys(self.subject)
@@ -374,7 +387,6 @@ def scan_file(input_file_json_txt, directory, numeric_compress_functions=["_mean
                         count_id_dict[subject_key][sub_key] += 1
                     else:
                         count_id_dict[subject_key][sub_key] = 1
-
         z += 1
 
     export_dict = {}
@@ -390,13 +402,12 @@ def scan_file(input_file_json_txt, directory, numeric_compress_functions=["_mean
 
 
 def generate_csv_files(input_file_json_txt, directory, base_name):
+    """Output CSV files of sequences"""
 
     scan_obj = ClassScan(directory)
 
     static_subjects = scan_obj.get_static_subjects()
-    # print(static_subjects)
     dynamic_subjects = scan_obj.get_dynamic_subjects()
-    # print(dynamic_subjects)
 
     static_csv_file_names_dict = {ss: os.path.join(directory, base_name + "_" + ss + ".csv") for ss in static_subjects}
     dynamic_csv_file_names_dict = {ds: os.path.join(directory, base_name + "_" + ds + ".csv") for ds in dynamic_subjects}
@@ -406,7 +417,7 @@ def generate_csv_files(input_file_json_txt, directory, base_name):
 
     data_reader = JsonLineReader(input_file_json_txt)
 
-    z = 0 # data item id
+    z = 0 # keep track of how many data items were processed
     for data_dict in data_reader:
         subjects = [k for k in list(data_dict.keys()) if k != "id"]
         id_value = data_dict["id"]
@@ -419,6 +430,29 @@ def generate_csv_files(input_file_json_txt, directory, base_name):
                 dynamic_csv_obj_dict[subject].write(id_value, z, data_dict[subject])
 
         z += 1
+
+    csv_json_meta_file_name = os.path.join(directory, "csv_input_data.json")
+
+    with open(csv_json_meta_file_name, "w") as fw:
+        csv_meta_data_dict = {"dynamic": {}, "static": {}}
+        for key in dynamic_csv_obj_dict:
+            csv_meta_data_dict["dynamic"][key] = {"file_name": dynamic_csv_obj_dict[key].file_name}
+            csv_meta_data_dict["dynamic"][key]["header"] = dynamic_csv_obj_dict[key].header
+            csv_meta_data_dict["dynamic"][key]["data_columns"] = dynamic_csv_obj_dict[key].header
+            csv_meta_data_dict["dynamic"][key]["_i_id"] = z
+            csv_meta_data_dict["dynamic"][key]["data_columns"] = dynamic_csv_obj_dict[key].data_columns
+            csv_meta_data_dict["dynamic"][key]["meta_data_columns"] = dynamic_csv_obj_dict[key].meta_data_columns
+            csv_meta_data_dict["dynamic"][key]["id_columns"] = dynamic_csv_obj_dict[key].id_columns
+
+        for key in static_csv_obj_dict:
+            csv_meta_data_dict["static"][key] = {"file_name": static_csv_obj_dict[key].file_name}
+            csv_meta_data_dict["static"][key]["header"] = static_csv_obj_dict[key].header
+            csv_meta_data_dict["static"][key]["_i_id"] = z
+            csv_meta_data_dict["static"][key]["data_columns"] = static_csv_obj_dict[key].data_columns
+            csv_meta_data_dict["static"][key]["meta_data_columns"] = static_csv_obj_dict[key].meta_data_columns
+            csv_meta_data_dict["static"][key]["id_columns"] = static_csv_obj_dict[key].id_columns
+
+        json.dump(csv_meta_data_dict, fw, sort_keys=True, indent=4, separators=(',', ': '))
 
 
 def generate_hdf5_files(input_file_json_txt, directory, base_name):

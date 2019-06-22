@@ -152,6 +152,7 @@ def sequence_generator(sequence_list, config_obj, sequence_start_time):
     if state == "Process": # We hit the end
         sequence_dict["meta"] = {}
         sequence_dict["meta"]["start_time"] = start_time
+        sequence_dict["meta"]["sequence_time_delta"] = start_time - sequence_start_time
         sequence_dict["meta"]["end_time"] = current_time
         sequence_dict["meta"]["sequence_i"] = sequence_i
         sequence_dict["meta"]["i"] = i

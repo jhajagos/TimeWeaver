@@ -13,7 +13,7 @@ class TestGenerateSequences(unittest.TestCase):
 
     def test_generate_sequences(self):
 
-        result_1 = sequence_generator(self.sequence_dict["dynamic"], self.config_obj)
+        result_1 = sequence_generator(self.sequence_dict["dynamic"], self.config_obj,0)
         self.assertIsNotNone(result_1)
 
     def test_generate_static(self):

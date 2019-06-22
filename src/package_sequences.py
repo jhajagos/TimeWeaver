@@ -53,11 +53,11 @@ class CSVWriter(object):
     def _define_data_columns(self):
         self._define_mapping_dicts()
 
-        self.column_positions = {"id": [0]}  # ID is always column 0
+        self.column_positions = {"id": [0], "_i_id": [1]}  # ID is always column 0
 
         # Order of columns
 
-        i = 1
+        i = 2
 
         for key in sorted(self.numeric_dict):
             self.column_positions[key] = [i]
@@ -93,8 +93,9 @@ class CSVWriter(object):
 
         self.header = [''] * self.number_of_columns
         self.header[0] = "id"
+        self.header[1] = "_i_id"
 
-        i = 1
+        i = 2
         for key in sorted(self.numeric_dict.keys()):
             self.header[i] = key
             i += 1
@@ -155,12 +156,13 @@ class CSVWriter(object):
             else:
                 self.numeric_dict[key] = subject_value_key
 
-    def _write(self, id_value, objects_dict, subject_type):
+    def _write(self, id_value, row_id, objects_dict, subject_type):
 
         keys_to_ignore = ["id", "meta"]
 
         row_template = [''] * self.number_of_columns
         row_template[0] = id_value
+        row_template[1] = row_id
 
         if objects_dict.__class__ != [].__class__:
             objects_dict = [objects_dict]
@@ -198,6 +200,7 @@ class CSVWriter(object):
                             row_to_write[data_positions[0] + self.categorical_dict[key][datum]] = 1
 
             if subject_type == "dynamic":
+                row_to_write[-4] = str(object_dict["meta"]["sequence_time_delta"])
                 row_to_write[-3] = str(object_dict["meta"]["sequence_i"])
                 row_to_write[-2] = str(object_dict["meta"]["start_time"])
                 row_to_write[-1] = str(object_dict["meta"]["time_span"])
@@ -210,17 +213,19 @@ class CSVWriter(object):
 
 class StaticCSVWriter(CSVWriter):
 
-    def write(self, id_value, object_dict):
-        self._write(id_value, object_dict, "static")
+    def write(self, id_value, row_id, object_dict):
+        self._write(id_value, row_id, object_dict, "static")
 
 
 class DynamicCSVWriter(CSVWriter):
 
-    def write(self, id_value, object_dict):
-        self._write(id_value, object_dict, "dynamic")
+    def write(self, id_value, row_id, object_dict):
+        self._write(id_value, row_id, object_dict, "dynamic")
 
     def _add_meta_data_columns(self):
         i = self.number_of_data_columns
+        self.column_positions["_sequence_time_delta"] = [i]
+        i += 1
         self.column_positions["_sequence_i"] = [i]
         i += 1
         self.column_positions["_start_time"] = [i]
@@ -233,6 +238,7 @@ class DynamicCSVWriter(CSVWriter):
         self.header[-1] = "_time_span"
         self.header[-2] = "_start_time"
         self.header[-3] = "_sequence_i"
+        self.header[-4] = "_sequence_time_delta"
 
 
 def mean(numeric_list):
@@ -276,7 +282,6 @@ def scan_file(input_file_json_txt, directory, numeric_compress_functions=["_mean
     count_dict = {}
     count_id_dict = {}
 
-
     histogram_sequence_dict = {}
 
     # Collect distribution of sequence
@@ -303,6 +308,11 @@ def scan_file(input_file_json_txt, directory, numeric_compress_functions=["_mean
             if subject_key not in values_dict:
                 values_dict[subject_key] = {}
                 count_dict[subject_key] = {}
+
+            if subject_key not in count_id_data_dict:
+                count_id_data_dict[subject_key] = {}
+
+            if subject_key not in count_id_dict:
                 count_id_dict[subject_key] = {}
 
             for subject in subjects:
@@ -318,10 +328,12 @@ def scan_file(input_file_json_txt, directory, numeric_compress_functions=["_mean
                                 if item_key not in values_dict[subject_key]:
                                     values_dict[subject_key][item_key] = numeric_compress_functions
                                     count_dict[subject_key][item_key] = 1
-                                    count_id_data_dict[subject_key][item_key] = 1
-
                                 else:
                                     count_dict[subject_key][item_key] += 1
+
+                                if item_key not in count_id_data_dict[subject_key]:
+                                    count_id_data_dict[subject_key][item_key] = 1
+
                             else:
                                 if item_key not in values_dict[subject_key]:
                                     values_dict[subject_key][item_key] = list(set(subject_item_key))
@@ -332,6 +344,9 @@ def scan_file(input_file_json_txt, directory, numeric_compress_functions=["_mean
                                         if sub_item not in value_subject_item_key:
                                             values_dict[subject_key][item_key] += [sub_item]
                                     count_dict[subject_key][item_key] += 1
+
+                                if item_key not in count_id_data_dict[subject_key]:
+                                    count_id_data_dict[subject_key][item_key] = 1
                     else:
                         if item_key not in values_dict[subject_key]:
                             if subject_item_key.__class__ == "".__class__:
@@ -342,20 +357,31 @@ def scan_file(input_file_json_txt, directory, numeric_compress_functions=["_mean
                                 elif subject_item_key.__class__ == int:
                                     values_dict[subject_key][item_key] = "int"
                             count_dict[subject_key][item_key] = 1
-                            count_dict[subject_key][item_key] = 1
+
                         else:
                             value_subject_item_key = values_dict[subject_key][item_key]
                             if value_subject_item_key.__class__ == [].__class__:
                                 if subject_item_key not in value_subject_item_key:
                                     values_dict[subject_key][item_key] += [subject_item_key]
                             count_dict[subject_key][item_key] += 1
-        z += 1
 
+                        if item_key not in count_id_data_dict[subject_key]:
+                            count_id_data_dict[subject_key][item_key] = 1
+
+            if subject_key in count_id_data_dict:
+                for sub_key in count_id_data_dict[subject_key]: # keep track how many times a variable appears
+                    if sub_key in count_id_dict[subject_key]:
+                        count_id_dict[subject_key][sub_key] += 1
+                    else:
+                        count_id_dict[subject_key][sub_key] = 1
+
+        z += 1
 
     export_dict = {}
     export_dict["histogram"] = histogram_sequence_dict
     export_dict["values"] = values_dict
     export_dict["value_counts"] = count_dict
+    export_dict["value_counts_id"] = count_id_dict
 
     export_file_name = os.path.join(directory, "class_scan.json")
 
@@ -380,6 +406,7 @@ def generate_csv_files(input_file_json_txt, directory, base_name):
 
     data_reader = JsonLineReader(input_file_json_txt)
 
+    z = 0 # data item id
     for data_dict in data_reader:
         subjects = [k for k in list(data_dict.keys()) if k != "id"]
         id_value = data_dict["id"]
@@ -387,9 +414,11 @@ def generate_csv_files(input_file_json_txt, directory, base_name):
         for subject in subjects:
 
             if subject in static_csv_obj_dict:
-                static_csv_obj_dict[subject].write(id_value, data_dict[subject])
+                static_csv_obj_dict[subject].write(id_value, z, data_dict[subject])
             elif subject in dynamic_csv_obj_dict:
-                dynamic_csv_obj_dict[subject].write(id_value, data_dict[subject])
+                dynamic_csv_obj_dict[subject].write(id_value, z, data_dict[subject])
+
+        z += 1
 
 
 def generate_hdf5_files(input_file_json_txt, directory, base_name):

@@ -24,6 +24,8 @@ from utilities import JsonLineReader
 import json
 import os
 import csv
+import numpy as np
+import h5py
 
 
 class CSVWriter(object):
@@ -262,6 +264,10 @@ class ClassScan(object):
 
     def __init__(self, directory):
         self.file_name = os.path.join(directory, "class_scan.json")
+
+        if not os.path.exists(self.file_name):
+            raise(RuntimeError, "File does not exist '%s'" % self.file_name)
+
         with open(self.file_name, "r") as f:
             self.scan = json.load(f)
 
@@ -455,8 +461,204 @@ def generate_csv_files(input_file_json_txt, directory, base_name):
         json.dump(csv_meta_data_dict, fw, sort_keys=True, indent=4, separators=(',', ': '))
 
 
-def generate_hdf5_files(input_file_json_txt, directory, base_name):
-    print("Feature is currently not implemented")
+def convert_annotations(annotations):
+    return [u.encode("ascii") for u in annotations]
+
+
+def generate_hdf5_file(input_file_json_txt, directory, base_name, max_n_sequences=100):
+    """
+        /dynamic/carry_forward/data/core_array
+        /dynamic/carry_forward/data/column_annotations
+
+        /dynamic/carry_forward/id/core_array "string type"
+        /dynamic/carry_forward/id/column_annotations
+
+        /dynamic/carry_forward/metadata/core_array # numeric Only for dynamic
+        /dynamic/carry_forward/metadata/column_annotations
+
+    """
+
+    csv_json_data = os.path.join(directory, "csv_input_data.json")
+    with open(csv_json_data, mode="r") as f:
+        csv_data_dict = json.load(f)
+
+    hd5_file_name = os.path.join(directory, base_name + "_sequences.hdf5")
+    with h5py.File(hd5_file_name, "w") as f5w:
+
+        dynamic_dict = csv_data_dict["dynamic"]
+
+        for key in dynamic_dict:
+
+            data_group = f5w.create_group("/dynamic/" + key + "/data/")
+            id_group = f5w.create_group("/dynamic/" + key + "/id/")
+            metadata_group = f5w.create_group("/dynamic/" + key + "/metadata/")
+
+            subject_dict = dynamic_dict[key]
+            number_of_items = subject_dict["_i_id"]
+
+            header = subject_dict["header"]
+            data_columns = subject_dict["data_columns"]
+
+            id_columns = subject_dict["id_columns"]
+            metadata_columns = subject_dict["meta_data_columns"]
+
+            data_group_ds = data_group.create_dataset("core_array", (number_of_items, max_n_sequences, len(data_columns)),
+                                                      dtype=float, compression="gzip")
+
+            ca_data_group_ds = data_group.create_dataset("column_annotations", (len(data_columns),), dtype="S256")
+
+            ca_data_group_ds[...] = convert_annotations(data_columns)
+
+            id_columns_ds = id_group.create_dataset("core_array", (number_of_items, max_n_sequences, 1),
+                                                    dtype="S64", compression="gzip")
+
+            metadata_ds = metadata_group.create_dataset("core_array", (number_of_items, max_n_sequences, len(metadata_columns)),
+                                                        dtype=float, compression="gzip")
+
+            ca_metadata_ds = metadata_group.create_dataset("column_annotations", (len(metadata_columns),), dtype="S256")
+
+            ca_metadata_ds[...] = convert_annotations(metadata_columns)
+
+            csv_file_name = subject_dict["file_name"]
+            with open(csv_file_name) as f:
+                csv_reader = csv.reader(f)
+
+                i = 0
+
+                id_column_position = id_columns.index("id")
+                i_column_position = id_columns.index("_i_id")
+
+                number_of_ids_c = len(id_columns)
+                number_of_metadata_c = len(metadata_columns)
+                number_of_data_c = len(data_columns)
+
+                past_row_i = None
+
+                id_list = []
+                metadata_list = []
+                data_list = []
+
+                for row in csv_reader:
+
+                    if i > 0:
+                        row_i = int(row[i_column_position])
+
+                        id_row = [[row[id_column_position]]]
+                        data_row = [row[number_of_ids_c: -1 * number_of_metadata_c]]
+
+                        for j in range(number_of_data_c): # Handle "" empty
+                            if data_row[0][j] == "":
+                                data_row[0][j] = "nan"
+
+                        metadata_row = [row[-1 * number_of_metadata_c:]]
+
+                        if row_i != past_row_i and past_row_i is not None:
+
+                            if len(data_list) < max_n_sequences:
+
+                                rows_to_add = max_n_sequences - len(data_list)
+                                data_padding = ["0"] * number_of_data_c
+                                data_padding_list = [data_padding] * rows_to_add
+                                data_list += data_padding_list
+
+                                metadata_padding = ["0"] * number_of_metadata_c
+                                metadata_padding_list = [metadata_padding] * rows_to_add
+                                metadata_list += metadata_padding_list
+
+                                id_padding_list = [['']] * rows_to_add
+                                id_list += id_padding_list
+
+                            data_group_ds[past_row_i, :, :] = np.array(data_list[0:max_n_sequences], dtype="float")
+                            metadata_ds[past_row_i, :, :] = np.array(metadata_list[0:max_n_sequences], dtype="float")
+                            id_columns_ds[past_row_i, :, :] = np.array(id_list[0:max_n_sequences], dtype="S64")
+
+                            id_list = list(id_row)
+                            data_list = list(data_row)
+                            metadata_list = list(metadata_row)
+
+                        else:
+                            id_list += list(id_row)
+                            data_list += list(data_row)
+                            metadata_list += list(metadata_row)
+
+                        past_row_i = row_i
+                    i += 1
+
+                #data_group_ds[:, :, row_i] = np.array(data_row[0:max_n_sequences], dtype="float")
+                # Add last item
+                if len(data_list) < max_n_sequences:
+                    rows_to_add = max_n_sequences - len(data_list)
+                    data_padding = ["0"] * number_of_data_c
+                    data_padding_list = [data_padding] * rows_to_add
+                    data_list += data_padding_list
+
+                    metadata_padding = ["0"] * number_of_metadata_c
+                    metadata_padding_list = [metadata_padding] * rows_to_add
+                    metadata_list += metadata_padding_list
+
+                    id_padding_list = [['']] * rows_to_add
+                    id_list += id_padding_list
+
+                data_group_ds[row_i, :, :] = np.array(data_list[0:max_n_sequences], dtype="float")
+                metadata_ds[row_i, :, :] = np.array(metadata_list[0:max_n_sequences], dtype="float")
+                id_columns_ds[row_i, :, :] = np.array(id_list[0:max_n_sequences], dtype="S64")
+
+        static_dict = csv_data_dict["static"]
+        for key in static_dict:
+
+            subject_dict = static_dict[key]
+            number_of_items = subject_dict["_i_id"]
+
+            data_group = f5w.create_group("/static/" + key + "/data/")
+            id_group = f5w.create_group("/static/" + key + "/id/")
+
+            data_columns = subject_dict["data_columns"]
+
+            id_columns = subject_dict["id_columns"]
+
+            data_group_ds = data_group.create_dataset("core_array",
+                                                      (number_of_items, len(data_columns)),
+                                                      dtype=float, compression="gzip")
+
+            ca_data_group_ds = data_group.create_dataset("column_annotations", (len(data_columns),), dtype="S256")
+
+            ca_data_group_ds[...] = convert_annotations(data_columns)
+
+            id_columns_ds = id_group.create_dataset("core_array", (number_of_items, 1),
+                                                    dtype="S64", compression="gzip")
+
+            with open(subject_dict["file_name"]) as f:
+                csv_reader = csv.reader(f)
+                id_column_position = id_columns.index("id")
+                i_column_position = id_columns.index("_i_id")
+
+                number_of_ids_c = len(id_columns)
+                number_of_data_c = len(data_columns)
+
+                data_list = []
+                id_list = []
+                #
+                # chunk_size = 500
+
+                i = 0
+                for row in csv_reader:
+
+                    if i > 0:
+                        row_i = int(row[i_column_position])
+                        data_row = [row[number_of_ids_c:]]
+                        id_row = [[row[id_column_position]]]
+
+                        for j in range(number_of_data_c): # Handle "" empty
+                            if data_row[0][j] == "":
+                                data_row[0][j] = "nan"
+
+                        data_group_ds[row_i,:] = np.array(data_row, dtype="float")
+                        id_columns_ds[row_i,:] = np.array(id_row, dtype="S64")
+
+                        # if i % chunk_size:
+                        #     pass
+
+                    i += 1
 
 
 def main(input_file_json_txt, command, directory, base_name):
@@ -466,7 +668,7 @@ def main(input_file_json_txt, command, directory, base_name):
     elif command == "csv":
         generate_csv_files(input_file_json_txt, directory, base_name)
     elif command == "hdf5":
-        generate_hdf5_files(input_file_json_txt, directory, base_name)
+        generate_hdf5_file(input_file_json_txt, directory, base_name)
 
 
 if __name__ == "__main__":

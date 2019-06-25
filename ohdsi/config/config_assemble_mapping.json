@@ -11,7 +11,7 @@
               "field_mappings": {"age_at_visit_start_in_years_int": "int", "person_id": "int"},
               "source": {
                 "type": "csv",
-                "file_name": "visit.csv"
+                "file_name": " map2_person_visit_occurrence.csv"
               },
               "type": "primary",
               "id_field_name": "visit_occurrence_id"
@@ -21,7 +21,7 @@
             "class": "visit_person",
             "source": {
               "type": "csv",
-              "file_name": "visit_person.csv"
+              "file_name": "map2_person_visit_occurrence.csv"
             },
             "type": "additional",
             "field_names": [
@@ -34,7 +34,7 @@
             "class": "condition",
             "source": {
               "type": "csv",
-              "file_name": "condition.csv"
+              "file_name": "map2_condition_occurrence.csv"
             },
             "type": "additional",
             "field_names": [

@@ -66,13 +66,13 @@
               "additional_field_name_mappings": {},
               "label" :
               {
-                "field_names": ["measurement_source_concept_id", "measurement_source_value"],
+                "field_names": ["measurement_concept_id", "measurement_concept_name"],
                 "join_character": "|"
               },
               "filter": {
                 "field_names": [
-                  "measurement_source_concept_id",
-                  "measurement_source_value"
+                  "measurement_concept_id",
+                  "measurement_concept_name"
                 ],
                 "values": [
                 ],

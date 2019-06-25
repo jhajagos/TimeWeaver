@@ -52,7 +52,7 @@
               },
               "source": {
                 "type": "csv",
-                "file_name": "measurement.csv"
+                "file_name": "map2_measurement.csv"
               },
               "joining_id_field_name": "visit_occurrence_id",
               "value":

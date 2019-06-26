@@ -111,7 +111,7 @@ class CSVWriter(object):
             z = 0
             key_list = []
             for data_key in data_keys:
-                key_list += [(z, data_key)]
+                key_list += [(data_keys[data_key], data_key)]
                 z += 1
 
             key_list.sort(key=lambda x: x[0])
@@ -124,11 +124,9 @@ class CSVWriter(object):
         for key in sorted(self.categorical_dict):
             data_keys = self.categorical_dict[key]
 
-            z = 0
             key_list = []
             for data_key in data_keys:
-                key_list += [(z, data_key)]
-                z += 1
+                key_list += [(data_keys[data_key], data_key)]
 
             key_list.sort(key=lambda x: x[0])
             starting_position = self.column_positions[key][0]
@@ -578,7 +576,7 @@ def generate_hdf5_file(input_file_json_txt, directory, base_name, max_n_sequence
                             metadata_ds[past_row_i, :, :] = np.array(metadata_list[0:max_n_sequences], dtype="float")
                             id_columns_ds[past_row_i, :, :] = np.array(id_list[0:max_n_sequences], dtype="S64")
 
-                            if past_row_i % 100 == 0:
+                            if past_row_i % 100 == 0 and i > 0:
                                 print(past_row_i)
 
                             id_list = list(id_row)

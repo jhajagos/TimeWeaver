@@ -82,7 +82,6 @@ class CSVWriter(object):
 
 
         k = j
-        data_keys = []
         for key in sorted(self.categorical_dict):
 
             data_keys = self.categorical_dict[key]
@@ -90,6 +89,7 @@ class CSVWriter(object):
             self.column_positions[key] = [0] * number_of_data_keys
             for data_key in data_keys:
                 position = data_keys[data_key]
+                # print(data_key, position)
                 self.column_positions[key][position] = k + position
             k += number_of_data_keys
 
@@ -123,15 +123,18 @@ class CSVWriter(object):
 
         for key in sorted(self.categorical_dict):
             data_keys = self.categorical_dict[key]
+
             z = 0
             key_list = []
             for data_key in data_keys:
                 key_list += [(z, data_key)]
                 z += 1
+
             key_list.sort(key=lambda x: x[0])
             starting_position = self.column_positions[key][0]
 
             for item in key_list:
+                # print(starting_position, item)
                 self.header[starting_position + item[0]] = key + self.separator + str(item[1])
 
         self._add_meta_data_header()
@@ -170,6 +173,8 @@ class CSVWriter(object):
                             i += 1
             else:
                 self.numeric_dict[key] = subject_value_key
+
+        #print(self.categorical_dict)
 
     def _write(self, id_value, row_id, objects_dict, subject_type):
 
@@ -572,6 +577,9 @@ def generate_hdf5_file(input_file_json_txt, directory, base_name, max_n_sequence
                             data_group_ds[past_row_i, :, :] = np.array(data_list[0:max_n_sequences], dtype="float")
                             metadata_ds[past_row_i, :, :] = np.array(metadata_list[0:max_n_sequences], dtype="float")
                             id_columns_ds[past_row_i, :, :] = np.array(id_list[0:max_n_sequences], dtype="S64")
+
+                            if past_row_i % 100 == 0:
+                                print(past_row_i)
 
                             id_list = list(id_row)
                             data_list = list(data_row)

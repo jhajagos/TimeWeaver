@@ -1,4 +1,6 @@
 encounter_id,sequence_id,diagnosis_class,diagnosis_code,diagnosis_desc
 1,1,Diabetes,E11,TDMI Controlled
 1,2,Kidney,N18.3,CKD III
+2,1,Diabetes,E11,TDMI Controlled
 2,1,Kidney,N18.3,CKD III
+2,1,Infection,A04.72,Cdiff

@@ -112,12 +112,18 @@ class Assembler(object):
                                                                        self.assemble_mapping_config.get_static_class(
                                                                            static_name))
 
+                            static_obj_list = []
                             for static_obj in static_objs.process():
-                                static_result_obj = static_obj
+                                static_obj_list += [static_obj]
+                            static_id = static_obj["id"]
 
-                            static_id = static_result_obj["id"]
+                            if len(static_obj_list) > 1:
+                                static_result[static_name] = static_obj_list
+                            else:
+                                static_result[static_name] = static_obj_list[0]
+
                             class_names_dict_id[static_name] = static_id
-                            static_result[static_name] = static_result_obj
+
 
                         except StopIteration:
                             static_finished += [static_name]

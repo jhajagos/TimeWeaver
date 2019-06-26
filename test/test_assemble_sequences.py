@@ -1,5 +1,6 @@
 import unittest
 import pprint
+import json
 
 from assemble_sequences import main, CSVBlockFile, StaticBlockPrimaryProcess, StaticBlockAdditionalProcess,\
     DynamicBlockProcess, AssembleMappingConfig, Assembler
@@ -22,6 +23,7 @@ class TestStaticBlock(unittest.TestCase):
 
     def setUp(self):
         self.additional_block_file_obj = CSVBlockFile("./data/encounter_details.csv", "encounter_id")
+        self.additional_block_multi_file_obj = CSVBlockFile("./data/encounter_dx.csv", "encounter_id")
         self.primary_block_file_obj = CSVBlockFile("./data/encounters.csv", "encounter_id")
 
         self.assemble_mapping = AssembleMappingConfig("./mappings/config_assemble_mapping.json")
@@ -36,6 +38,20 @@ class TestStaticBlock(unittest.TestCase):
         process_result_1 = block_process_list_obj[0].process()
 
         self.assertIsNotNone(process_result_1)
+
+    def test_static_multi_read(self):
+        block_process_list_obj = []
+
+        for block in self.additional_block_multi_file_obj:
+            block_process_list_obj += [StaticBlockAdditionalProcess(block,
+                                                                    self.assemble_mapping.get_static_class(
+                                                                        "diagnosis"))]
+
+        process_result_1 = block_process_list_obj[0].process()
+        process_result_2 = block_process_list_obj[1].process()
+
+        self.assertEqual(len(process_result_1), 2)
+        self.assertEqual(len(process_result_2), 3)
 
     def test_primary(self):
 
@@ -77,17 +93,25 @@ class TestDynamicBlock(unittest.TestCase):
 class CSVBlockFileTestCase(unittest.TestCase):
     def test_read(self):
 
-        block_obj = CSVBlockFile("./data/measurements.csv", "encounter_id")
+        block_obj_1 = CSVBlockFile("./data/measurements.csv", "encounter_id")
 
-        list_block_obj = list(block_obj)
+        list_block_obj_1 = list(block_obj_1)
 
-        self.assertEqual(3, len(list_block_obj))
+        self.assertEqual(3, len(list_block_obj_1))
 
-        self.assertEqual(6, len(list_block_obj[0]))
+        self.assertEqual(6, len(list_block_obj_1[0]))
 
-        self.assertEqual(2, len(list_block_obj[1]))
+        self.assertEqual(2, len(list_block_obj_1[1]))
 
-        self.assertEqual(1, len(list_block_obj[2]))
+        self.assertEqual(1, len(list_block_obj_1[2]))
+
+        block_obj_2 = CSVBlockFile("./data/encounter_dx.csv", "encounter_id")
+
+        list_block_obj_2 = list(block_obj_2)
+
+        self.assertEqual(2, len(list_block_obj_2[0]))
+
+        self.assertEqual(3, len(list_block_obj_2[1]))
 
 
 class AssembleTestCase(unittest.TestCase):
@@ -95,7 +119,13 @@ class AssembleTestCase(unittest.TestCase):
 
         main("./mappings/config_assemble_mapping.json", "./data/", "./output/test_output_result.json.txt")
 
-        self.assertEqual(True, True)
+        with open("./output/test_output_result.json.txt") as f:
+
+            result_1 = json.loads(f.__next__())
+            result_2 = json.loads(f.__next__())
+            result_3 = json.loads(f.__next__())
+
+        self.assertIsNotNone(result_1)
 
 
 if __name__ == '__main__':

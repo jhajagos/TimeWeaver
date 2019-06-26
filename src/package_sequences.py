@@ -468,7 +468,7 @@ def convert_annotations(annotations):
     return [u.encode("ascii") for u in annotations]
 
 
-def generate_hdf5_file(input_file_json_txt, directory, base_name, max_n_sequences=100):
+def generate_hdf5_file(input_file_json_txt, directory, base_name, max_n_sequences=100, compression_method="lzf"):
     """
         /dynamic/carry_forward/data/core_array
         /dynamic/carry_forward/data/column_annotations
@@ -506,17 +506,17 @@ def generate_hdf5_file(input_file_json_txt, directory, base_name, max_n_sequence
             metadata_columns = subject_dict["meta_data_columns"]
 
             data_group_ds = data_group.create_dataset("core_array", (number_of_items, max_n_sequences, len(data_columns)),
-                                                      dtype=float, compression="gzip")
+                                                      dtype=float, compression=compression_method)
 
             ca_data_group_ds = data_group.create_dataset("column_annotations", (len(data_columns),), dtype="S256")
 
             ca_data_group_ds[...] = convert_annotations(data_columns)
 
             id_columns_ds = id_group.create_dataset("core_array", (number_of_items, max_n_sequences, 1),
-                                                    dtype="S64", compression="gzip")
+                                                    dtype="S64", compression=compression_method)
 
             metadata_ds = metadata_group.create_dataset("core_array", (number_of_items, max_n_sequences, len(metadata_columns)),
-                                                        dtype=float, compression="gzip")
+                                                        dtype=float, compression=compression_method)
 
             ca_metadata_ds = metadata_group.create_dataset("column_annotations", (len(metadata_columns),), dtype="S256")
 
@@ -625,14 +625,14 @@ def generate_hdf5_file(input_file_json_txt, directory, base_name, max_n_sequence
 
             data_group_ds = data_group.create_dataset("core_array",
                                                       (number_of_items, len(data_columns)),
-                                                      dtype=float, compression="gzip")
+                                                      dtype=float, compression=compression_method)
 
             ca_data_group_ds = data_group.create_dataset("column_annotations", (len(data_columns),), dtype="S256")
 
             ca_data_group_ds[...] = convert_annotations(data_columns)
 
             id_columns_ds = id_group.create_dataset("core_array", (number_of_items, 1),
-                                                    dtype="S64", compression="gzip")
+                                                    dtype="S64", compression=compression_method)
 
             print("Processing '%s'" % subject_dict["file_name"])
             with open(subject_dict["file_name"]) as f:

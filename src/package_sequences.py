@@ -520,6 +520,7 @@ def generate_hdf5_file(input_file_json_txt, directory, base_name, max_n_sequence
             ca_metadata_ds[...] = convert_annotations(metadata_columns)
 
             csv_file_name = subject_dict["file_name"]
+            print("Processing '%s'" % csv_file_name)
             with open(csv_file_name) as f:
                 csv_reader = csv.reader(f)
 
@@ -627,6 +628,7 @@ def generate_hdf5_file(input_file_json_txt, directory, base_name, max_n_sequence
             id_columns_ds = id_group.create_dataset("core_array", (number_of_items, 1),
                                                     dtype="S64", compression="gzip")
 
+            print("Processing '%s'" % subject_dict["file_name"])
             with open(subject_dict["file_name"]) as f:
                 csv_reader = csv.reader(f)
                 id_column_position = id_columns.index("id")

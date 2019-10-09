@@ -417,7 +417,7 @@ class DynamicBlockProcess(Block):
 
     def _check_if_matches(self, item_dict):
 
-        if self.filter_criteria is None: # if no filter return
+        if self.filter_criteria is None:  # if no filter return
             return True
         else:
             item_value = []
@@ -429,8 +429,15 @@ class DynamicBlockProcess(Block):
                     return True
                 else:
                     return False
+
+            elif self.filter_criteria == "not_equal":
+                if item_value in self.filter_values:
+                    return False
+                else:
+                    return True
+
             else:
-                return False # Only support or criteria
+                return False # Other criteria
 
     def _process_label(self, row_dict):
         label_list = []

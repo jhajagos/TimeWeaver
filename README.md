@@ -133,18 +133,18 @@ python3 generate_sequences.py -j ..\ohdsi\config\config_sequences.json -i Y:\ds\
 #### Scan
 
 ```bash
-python.exe .\package_sequences.py -f Y:\healthfacts\ts\result.tseries.json.txt -c scan -b ohdsi -d Y:\ds\ts\output\
+python .\package_sequences.py -f Y:\healthfacts\ts\result.tseries.json.txt -c scan -b ohdsi -d Y:\ds\ts\output\
 ```
 
 #### Export to CSV
 
 ```bash
-python.exe .\package_sequences.py -f Y:\healthfacts\ts\result.tseries.json.txt -c csv -b ohdsi -d Y:\ds\ts\output\
+python .\package_sequences.py -f Y:\healthfacts\ts\result.tseries.json.txt -c csv -b ohdsi -d Y:\ds\ts\output\
 ```
 
 #### Package as HDF5 file
 
 ```bash
-python.exe .\package_sequences.py -f Y:\healthfacts\ts\result.tseries.json.txt -c csv -b ohdsi -d Y:\ds\ts\output\
+python .\package_sequences.py -f Y:\healthfacts\ts\result.tseries.json.txt -c csv -b ohdsi -d Y:\ds\ts\output\
 ```
 

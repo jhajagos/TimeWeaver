@@ -1,15 +1,13 @@
 """
-    Modes:
+    Modes of operation:
         scan:
             Must be run first
             Generates positional mappings
-            expanded categorical variables
-
+            expand categorical variables
         csv:
             Outputs sequences into CSV files
             dynamic
             static
-
         hdf5:
             Output data to structured HDF5 format
             Must be run after csv
@@ -17,7 +15,6 @@
             maximum number of steps
 
 """
-
 
 import argparse
 from utilities import JsonLineReader
@@ -79,7 +76,6 @@ class CSVWriter(object):
                 self.column_positions[key][position] = j + position
 
             j += number_of_data_keys
-
 
         k = j
         for key in sorted(self.categorical_dict):
@@ -470,6 +466,8 @@ def convert_annotations(annotations):
 
 def generate_hdf5_file(input_file_json_txt, directory, base_name, max_n_sequences=100, compression_method="lzf"):
     """
+    HDF5 file layout:
+
         /dynamic/carry_forward/data/core_array
         /dynamic/carry_forward/data/column_annotations
 
@@ -478,7 +476,6 @@ def generate_hdf5_file(input_file_json_txt, directory, base_name, max_n_sequence
 
         /dynamic/carry_forward/metadata/core_array # numeric Only for dynamic
         /dynamic/carry_forward/metadata/column_annotations
-
     """
 
     csv_json_data = os.path.join(directory, "csv_input_data.json")
@@ -550,7 +547,7 @@ def generate_hdf5_file(input_file_json_txt, directory, base_name, max_n_sequence
                         id_row = [[row[id_column_position]]]
                         data_row = [row[number_of_ids_c: -1 * number_of_metadata_c]]
 
-                        for j in range(number_of_data_c): # Handle "" empty
+                        for j in range(number_of_data_c):  # Handle "" empty
                             if data_row[0][j] == "":
                                 data_row[0][j] = "nan"
 
@@ -656,27 +653,24 @@ def generate_hdf5_file(input_file_json_txt, directory, base_name, max_n_sequence
                         data_row = [row[number_of_ids_c:]]
                         id_row = [[row[id_column_position]]]
 
-                        for j in range(number_of_data_c): # Handle "" empty
+                        for j in range(number_of_data_c):  # Handle "" empty
                             if data_row[0][j] == "":
                                 data_row[0][j] = "nan"
 
-                        data_group_ds[row_i,:] = np.array(data_row, dtype="float")
-                        id_columns_ds[row_i,:] = np.array(id_row, dtype="S64")
-
-                        # if i % chunk_size:
-                        #     pass
+                        data_group_ds[row_i, :] = np.array(data_row, dtype="float")
+                        id_columns_ds[row_i, :] = np.array(id_row, dtype="S64")
 
                     i += 1
 
 
-def main(input_file_json_txt, command, directory, base_name):
+def main(input_file_json_txt, command, directory, base_name, number_of_steps):
 
     if command == "scan":
         scan_file(input_file_json_txt, directory)
     elif command == "csv":
         generate_csv_files(input_file_json_txt, directory, base_name)
     elif command == "hdf5":
-        generate_hdf5_file(input_file_json_txt, directory, base_name)
+        generate_hdf5_file(input_file_json_txt, directory, base_name, max_n_sequences=number_of_steps)
 
 
 if __name__ == "__main__":
@@ -686,7 +680,9 @@ if __name__ == "__main__":
     arg_parse_obj.add_argument("-c", "--command", dest="command", required=True, help="Modes: scan, csv, hdf5")
     arg_parse_obj.add_argument("-b", "--base-name", dest="base_name", default="sequence", help="base name for files")
     arg_parse_obj.add_argument("-d", "--directory", dest="directory", default="./", help="Directory to write files to")
+    arg_parse_obj.add_argument("-n", "--number-of-steps", dest="number_of_steps", default=100)
 
     arg_obj = arg_parse_obj.parse_args()
 
-    main(arg_obj.input_file_json_txt, arg_obj.command, arg_obj.directory, arg_obj.base_name)
+    main(arg_obj.input_file_json_txt, arg_obj.command, arg_obj.directory, arg_obj.base_name,
+         int(arg_obj.number_of_steps))

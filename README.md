@@ -16,13 +16,13 @@ measurements.
 
 This step generates a `json.txt` which includes static and temporal data. A 
 `json.txt` file is text file where each line is JSON object. This structure helps 
-with memory usage as file can interated through.
+with memory usage as file can iterated through.
 
 ```bash
 python3 assemble_sequences.py -j ..\ohdsi\config\config_assemble_mapping.json -i Y:\ds\ts\ -o Y:\ds\ts\tseries.json.txt
 ```
 
-The program is primarily driven by a mapping file. The mapping file has two parts.
+The program which assembles sequences is primarily driven by a mapping file. The mapping file has two parts.
 ```json
 {
     "static": {},
@@ -31,9 +31,45 @@ The program is primarily driven by a mapping file. The mapping file has two part
 ```
 
 #### Static ####
-```json
 
+There are two types of entries in the static. The required `{"type": "primary"}` and
+the optional `{"type": "additional"}`.
+
+```json
+ {
+              "class": "visit",
+              "date_time": {
+                "field_name": "visit_start_datetime",
+                "format": "%Y-%m-%d %H:%M:%S"
+              },
+              "field_names": ["person_id", "visit_start_datetime","visit_start_datetime", "age_at_visit_start_in_years_int",
+                "visit_type_concept_id", "visit_concept_name", "care_site_name"],
+              "field_mappings": {"age_at_visit_start_in_years_int": "int", "person_id": "int"},
+              "source": {
+                "type": "csv",
+                "file_name": "map2_visit_occurrence.csv"
+              },
+              "type": "primary",
+              "id_field_name": "visit_occurrence_id"
+}
 ```
+
+```json
+{
+        "id_field_name": "visit_occurrence_id",
+        "class": "visit_person",
+        "source": {
+          "type": "csv",
+          "file_name": "map2_person_visit_occurrence.csv"
+        },
+        "type": "additional",
+        "field_names": [
+          "gender_concept_name", "race_concept_name"
+        ],
+        "field_mappings": {}
+}
+```
+
 #### Dynamic ####
 
 The dynamic section is used to configure which fields get mapped into the sequence.
@@ -120,7 +156,6 @@ To include certain values:
              "values": ["5640","6387"],
              "criteria": "or"}}
 ```
-
 
 ### Sequence generation step
 

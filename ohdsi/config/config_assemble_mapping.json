@@ -103,8 +103,7 @@
                 "field_names": [
                   "drug_concept_id"
                 ],
-                "values": ["0"
-                ],
+                "values": ["0"],
                 "criteria": "not_equal"
               }
              }

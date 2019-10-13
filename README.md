@@ -15,7 +15,7 @@ measurements.
 ### Sequence assembly step
 
 This step generates a `json.txt` which includes static and temporal data. A 
-`json.txt` file is text file where each line is JSON object. This structure helps 
+`json.txt` file is text file where each line is a JSON object. This structure helps 
 with memory usage as file can iterated through.
 
 ```bash
@@ -180,6 +180,6 @@ python .\package_sequences.py -f Y:\healthfacts\ts\result.tseries.json.txt -c cs
 #### Package as HDF5 file
 
 ```bash
-python .\package_sequences.py -f Y:\healthfacts\ts\result.tseries.json.txt -c csv -b ohdsi -d Y:\ds\ts\output\
+python .\package_sequences.py -f Y:\healthfacts\ts\result.tseries.json.txt -c hdf5 -b ohdsi -d Y:\ds\ts\output\
 ```
 

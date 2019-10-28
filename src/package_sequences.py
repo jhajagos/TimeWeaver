@@ -464,7 +464,7 @@ def convert_annotations(annotations):
     return [u.encode("ascii") for u in annotations]
 
 
-def generate_hdf5_file(input_file_json_txt, directory, base_name, max_n_sequences=100, compression_method="lzf"):
+def generate_hdf5_file(input_file_json_txt, directory, base_name, max_n_sequences=100, compression_method="lzf", buffer_size=1000):
     """
     HDF5 file layout:
 
@@ -482,8 +482,8 @@ def generate_hdf5_file(input_file_json_txt, directory, base_name, max_n_sequence
     with open(csv_json_data, mode="r") as f:
         csv_data_dict = json.load(f)
 
-    hd5_file_name = os.path.join(directory, base_name + "_sequences.hdf5")
-    with h5py.File(hd5_file_name, "w") as f5w:
+    hdf5_file_name = os.path.join(directory, base_name + "_sequences.hdf5")
+    with h5py.File(hdf5_file_name, "w") as f5w:
 
         dynamic_dict = csv_data_dict["dynamic"]
 
@@ -505,6 +505,7 @@ def generate_hdf5_file(input_file_json_txt, directory, base_name, max_n_sequence
             data_group_ds = data_group.create_dataset("core_array", (number_of_items, max_n_sequences, len(data_columns)),
                                                       dtype=float, compression=compression_method)
 
+
             ca_data_group_ds = data_group.create_dataset("column_annotations", (len(data_columns),), dtype="S256")
 
             ca_data_group_ds[...] = convert_annotations(data_columns)
@@ -518,6 +519,10 @@ def generate_hdf5_file(input_file_json_txt, directory, base_name, max_n_sequence
             ca_metadata_ds = metadata_group.create_dataset("column_annotations", (len(metadata_columns),), dtype="S256")
 
             ca_metadata_ds[...] = convert_annotations(metadata_columns)
+
+            data_group_buffer_array = np.zeros(shape=(buffer_size, max_n_sequences, len(data_columns)))
+            metadata_buffer_array = np.zeros(shape=(buffer_size, max_n_sequences, len(metadata_columns)))
+            id_columns_buffer_array = np.empty(shape=(buffer_size, max_n_sequences, 1), dtype=id_columns_ds.dtype)
 
             csv_file_name = subject_dict["file_name"]
             print("Processing '%s'" % csv_file_name)
@@ -539,6 +544,9 @@ def generate_hdf5_file(input_file_json_txt, directory, base_name, max_n_sequence
                 metadata_list = []
                 data_list = []
 
+                buffers_written = 0
+                buffer_start = 0
+
                 for row in csv_reader:
 
                     if i > 0:
@@ -553,7 +561,7 @@ def generate_hdf5_file(input_file_json_txt, directory, base_name, max_n_sequence
 
                         metadata_row = [row[-1 * number_of_metadata_c:]]
 
-                        if row_i != past_row_i and past_row_i is not None:
+                        if row_i != past_row_i and past_row_i is not None:  # You have read one row too much
 
                             if len(data_list) < max_n_sequences:
 
@@ -569,12 +577,34 @@ def generate_hdf5_file(input_file_json_txt, directory, base_name, max_n_sequence
                                 id_padding_list = [['']] * rows_to_add
                                 id_list += id_padding_list
 
-                            data_group_ds[past_row_i, :, :] = np.array(data_list[0:max_n_sequences], dtype="float")
-                            metadata_ds[past_row_i, :, :] = np.array(metadata_list[0:max_n_sequences], dtype="float")
-                            id_columns_ds[past_row_i, :, :] = np.array(id_list[0:max_n_sequences], dtype="S64")
+                            data_group_buffer_array[past_row_i - buffer_start, :, :] = np.array(data_list[0:max_n_sequences], dtype="float")
+                            metadata_buffer_array[past_row_i - buffer_start, :, :] = np.array(metadata_list[0:max_n_sequences], dtype="float")
+                            id_columns_buffer_array[past_row_i - buffer_start, :, :] = np.array(id_list[0:max_n_sequences], dtype="S64")
 
-                            if past_row_i % 100 == 0 and i > 0:
-                                print(past_row_i)
+
+                            if (past_row_i + 1) % buffer_size == 0 and past_row_i > 0:  # Time to write to the buffer
+                                #print("YYYYY")
+                                b_start = buffers_written * buffer_size
+                                b_end = (buffers_written + 1) * buffer_size
+
+                                #print(past_row_i, buffer_start, buffers_written, b_start, b_end)
+                                #print(data_group_buffer_array[:,0,:])
+
+                                data_group_ds[b_start:b_end, :, :] = data_group_buffer_array[0:buffer_size, :, :]
+                                metadata_ds[b_start:b_end, :, :] = metadata_buffer_array[0:buffer_size, :, :]
+                                id_columns_ds[b_start:b_end, :, :] = id_columns_buffer_array[0:buffer_size, :, :]
+
+                                buffers_written += 1
+
+                                # Reset buffers
+                                data_group_buffer_array = np.zeros(
+                                    shape=(buffer_size, max_n_sequences, len(data_columns)))
+                                metadata_buffer_array = np.zeros(
+                                    shape=(buffer_size, max_n_sequences, len(metadata_columns)))
+                                id_columns_buffer_array = np.empty(shape=(buffer_size, max_n_sequences, 1),
+                                                                   dtype=id_columns_ds.dtype)
+
+                                buffer_start = buffers_written * buffer_size
 
                             id_list = list(id_row)
                             data_list = list(data_row)
@@ -588,8 +618,7 @@ def generate_hdf5_file(input_file_json_txt, directory, base_name, max_n_sequence
                         past_row_i = row_i
                     i += 1
 
-                #data_group_ds[:, :, row_i] = np.array(data_row[0:max_n_sequences], dtype="float")
-                # Add last item
+                # Add last items
                 if len(data_list) < max_n_sequences:
                     rows_to_add = max_n_sequences - len(data_list)
                     data_padding = ["0"] * number_of_data_c
@@ -603,9 +632,17 @@ def generate_hdf5_file(input_file_json_txt, directory, base_name, max_n_sequence
                     id_padding_list = [['']] * rows_to_add
                     id_list += id_padding_list
 
-                data_group_ds[row_i, :, :] = np.array(data_list[0:max_n_sequences], dtype="float")
-                metadata_ds[row_i, :, :] = np.array(metadata_list[0:max_n_sequences], dtype="float")
-                id_columns_ds[row_i, :, :] = np.array(id_list[0:max_n_sequences], dtype="S64")
+                    data_group_buffer_array[row_i - buffer_start, :, :] = np.array(data_list[0:max_n_sequences], dtype="float")
+                    metadata_buffer_array[row_i - buffer_start, :, :] = np.array(metadata_list[0:max_n_sequences], dtype="float")
+                    id_columns_buffer_array[row_i - buffer_start, :, :] = np.array(id_list[0:max_n_sequences], dtype="S64")
+
+                b_start = buffers_written * buffer_size
+                b_end = number_of_items
+
+                data_group_ds[b_start:b_end, :, :] = data_group_buffer_array[0:b_end-b_start, :, :]
+                metadata_ds[b_start:b_end, :, :] = metadata_buffer_array[0:b_end-b_start, :, :]
+                id_columns_ds[b_start:b_end, :, :] = id_columns_buffer_array[0:b_end-b_start, :, :]
+                buffers_written += 1
 
         static_dict = csv_data_dict["static"]
         for key in static_dict:

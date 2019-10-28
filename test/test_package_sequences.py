@@ -29,5 +29,12 @@ class PackageSequenceTestCase(unittest.TestCase):
         generate_csv_files("./data/result.1.json.txt", "./output/", "test")
         generate_hdf5_file("./data/result.1.json.txt", "./output/", "test")
 
+
+    def test_generate_buffered_hdf5_files(self):
+
+        scan_file("./data/result.1.json.txt", "./output/")
+        generate_csv_files("./data/result.1.json.txt", "./output/", "test")
+        generate_hdf5_file("./data/result.1.json.txt", "./output/", "test", buffer_size=2)
+
 if __name__ == '__main__':
     unittest.main()

@@ -464,7 +464,7 @@ def convert_annotations(annotations):
     return [u.encode("ascii") for u in annotations]
 
 
-def generate_hdf5_file(input_file_json_txt, directory, base_name, max_n_sequences=100, compression_method="lzf", buffer_size=1000):
+def generate_hdf5_file(input_file_json_txt, directory, base_name, max_n_sequences=100, compression_method="lzf", buffer_size=100):
     """
     HDF5 file layout:
 
@@ -520,8 +520,10 @@ def generate_hdf5_file(input_file_json_txt, directory, base_name, max_n_sequence
 
             ca_metadata_ds[...] = convert_annotations(metadata_columns)
 
-            data_group_buffer_array = np.zeros(shape=(buffer_size, max_n_sequences, len(data_columns)))
-            metadata_buffer_array = np.zeros(shape=(buffer_size, max_n_sequences, len(metadata_columns)))
+            data_group_buffer_array = np.zeros(shape=(buffer_size, max_n_sequences, len(data_columns)),
+                                               dtype=data_group_ds.dtype)
+            metadata_buffer_array = np.zeros(shape=(buffer_size, max_n_sequences, len(metadata_columns)),
+                                             dtype=metadata_ds.dtype)
             id_columns_buffer_array = np.empty(shape=(buffer_size, max_n_sequences, 1), dtype=id_columns_ds.dtype)
 
             csv_file_name = subject_dict["file_name"]
@@ -589,6 +591,8 @@ def generate_hdf5_file(input_file_json_txt, directory, base_name, max_n_sequence
 
                                 #print(past_row_i, buffer_start, buffers_written, b_start, b_end)
                                 #print(data_group_buffer_array[:,0,:])
+
+                                print("Writing buffers at %s" % past_row_i)
 
                                 data_group_ds[b_start:b_end, :, :] = data_group_buffer_array[0:buffer_size, :, :]
                                 metadata_ds[b_start:b_end, :, :] = metadata_buffer_array[0:buffer_size, :, :]

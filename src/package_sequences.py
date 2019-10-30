@@ -596,7 +596,7 @@ def generate_hdf5_file(input_file_json_txt, directory, base_name, max_n_sequence
                                 #print(past_row_i, buffer_start, buffers_written, b_start, b_end)
                                 #print(data_group_buffer_array[:,0,:])
 
-                                print("Writing buffers at %s" % past_row_i + 1)
+                                print("Writing buffers at %s" % (past_row_i + 1))
 
                                 data_group_ds[b_start:b_end, :, :] = data_group_buffer_array[0:buffer_size, :, :]
                                 metadata_ds[b_start:b_end, :, :] = metadata_buffer_array[0:buffer_size, :, :]

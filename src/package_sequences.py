@@ -579,20 +579,24 @@ def generate_hdf5_file(input_file_json_txt, directory, base_name, max_n_sequence
                                 id_padding_list = [['']] * rows_to_add
                                 id_list += id_padding_list
 
-                            data_group_buffer_array[past_row_i - buffer_start, :, :] = np.array(data_list[0:max_n_sequences], dtype="float")
-                            metadata_buffer_array[past_row_i - buffer_start, :, :] = np.array(metadata_list[0:max_n_sequences], dtype="float")
-                            id_columns_buffer_array[past_row_i - buffer_start, :, :] = np.array(id_list[0:max_n_sequences], dtype="S64")
+                            try:
+                                data_group_buffer_array[past_row_i - buffer_start, :, :] = np.array(data_list[0:max_n_sequences], dtype="float")
+                                metadata_buffer_array[past_row_i - buffer_start, :, :] = np.array(metadata_list[0:max_n_sequences], dtype="float")
+                                id_columns_buffer_array[past_row_i - buffer_start, :, :] = np.array(id_list[0:max_n_sequences], dtype="S64")
+                            except IndexError:
+                                print({"i": i, "row_i": row_i, "past_row_i": i, "buffer_start": buffer_start, "len_data": len(data_list)})
+                                raise (RuntimeError)
 
 
                             if (past_row_i + 1) % buffer_size == 0 and past_row_i > 0:  # Time to write to the buffer
-                                #print("YYYYY")
+
                                 b_start = buffers_written * buffer_size
                                 b_end = (buffers_written + 1) * buffer_size
 
                                 #print(past_row_i, buffer_start, buffers_written, b_start, b_end)
                                 #print(data_group_buffer_array[:,0,:])
 
-                                print("Writing buffers at %s" % past_row_i)
+                                print("Writing buffers at %s" % past_row_i + 1)
 
                                 data_group_ds[b_start:b_end, :, :] = data_group_buffer_array[0:buffer_size, :, :]
                                 metadata_ds[b_start:b_end, :, :] = metadata_buffer_array[0:buffer_size, :, :]
@@ -727,3 +731,15 @@ if __name__ == "__main__":
 
     main(arg_obj.input_file_json_txt, arg_obj.command, arg_obj.directory, arg_obj.base_name,
          int(arg_obj.number_of_steps))
+
+    """
+    Writing buffers at 37299
+Traceback (most recent call last):
+  File "package_sequences.py", line 729, in <module>
+    int(arg_obj.number_of_steps))
+  File "package_sequences.py", line 714, in main
+    generate_hdf5_file(input_file_json_txt, directory, base_name, max_n_sequences=number_of_steps)
+  File "package_sequences.py", line 582, in generate_hdf5_file
+    data_group_buffer_array[past_row_i - buffer_start, :, :] = np.array(data_list[0:max_n_sequences], dtype="float")
+IndexError: index 100 is out of bounds for axis 0 with size 100
+    """

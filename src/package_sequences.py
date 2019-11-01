@@ -583,15 +583,12 @@ def generate_hdf5_file(input_file_json_txt, directory, base_name, max_n_sequence
                                 data_group_buffer_array[past_row_i - buffer_start, :, :] = np.array(data_list[0:max_n_sequences], dtype="float")
                                 metadata_buffer_array[past_row_i - buffer_start, :, :] = np.array(metadata_list[0:max_n_sequences], dtype="float")
                                 id_columns_buffer_array[past_row_i - buffer_start, :, :] = np.array(id_list[0:max_n_sequences], dtype="S64")
-
                                 buffer_overrun = False
 
                             except IndexError:
                                 # Need to check the gap offset if there is no dynamic data
-                                if row_i - 1 != past_row_i:
-                                    buffer_overrun = True
-                                else:
-                                    raise IndexError
+                                buffer_overrun = True
+
 
                             if (past_row_i + 1) % buffer_size == 0 and past_row_i > 0:  # Time to write to the buffer
 
@@ -617,11 +614,11 @@ def generate_hdf5_file(input_file_json_txt, directory, base_name, max_n_sequence
                                 buffer_start = buffers_written * buffer_size
 
                                 if buffer_overrun:  # If we over ran the buffer because of a record with no data write to the first row
-                                    data_group_buffer_array[0, :, :] = np.array(
+                                    data_group_buffer_array[past_row_i - buffer_start, :, :] = np.array(
                                         data_list[0:max_n_sequences], dtype="float")
-                                    metadata_buffer_array[0, :, :] = np.array(
+                                    metadata_buffer_array[past_row_i - buffer_start, :, :] = np.array(
                                         metadata_list[0:max_n_sequences], dtype="float")
-                                    id_columns_buffer_array[0, :, :] = np.array(
+                                    id_columns_buffer_array[past_row_i - buffer_start, :, :] = np.array(
                                         id_list[0:max_n_sequences], dtype="S64")
 
                             id_list = list(id_row)

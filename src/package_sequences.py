@@ -422,7 +422,7 @@ def generate_csv_files(input_file_json_txt, directory, base_name):
 
     data_reader = JsonLineReader(input_file_json_txt)
 
-    z = 0 # keep track of how many data items were processed
+    z = 0  # keep track of how many data items were processed
     for data_dict in data_reader:
         subjects = [k for k in list(data_dict.keys()) if k != "id"]
         id_value = data_dict["id"]
@@ -583,18 +583,20 @@ def generate_hdf5_file(input_file_json_txt, directory, base_name, max_n_sequence
                                 data_group_buffer_array[past_row_i - buffer_start, :, :] = np.array(data_list[0:max_n_sequences], dtype="float")
                                 metadata_buffer_array[past_row_i - buffer_start, :, :] = np.array(metadata_list[0:max_n_sequences], dtype="float")
                                 id_columns_buffer_array[past_row_i - buffer_start, :, :] = np.array(id_list[0:max_n_sequences], dtype="S64")
-                            except IndexError:
-                                print({"i": i, "row_i": row_i, "past_row_i": i, "buffer_start": buffer_start, "len_data": len(data_list)})
-                                raise (RuntimeError)
 
+                                buffer_overrun = False
+
+                            except IndexError:
+                                # Need to check the gap offset if there is no dynamic data
+                                if row_i - 1 != past_row_i:
+                                    buffer_overrun = True
+                                else:
+                                    raise IndexError
 
                             if (past_row_i + 1) % buffer_size == 0 and past_row_i > 0:  # Time to write to the buffer
 
                                 b_start = buffers_written * buffer_size
                                 b_end = (buffers_written + 1) * buffer_size
-
-                                #print(past_row_i, buffer_start, buffers_written, b_start, b_end)
-                                #print(data_group_buffer_array[:,0,:])
 
                                 print("Writing buffers at %s" % (past_row_i + 1))
 
@@ -613,6 +615,14 @@ def generate_hdf5_file(input_file_json_txt, directory, base_name, max_n_sequence
                                                                    dtype=id_columns_ds.dtype)
 
                                 buffer_start = buffers_written * buffer_size
+
+                                if buffer_overrun:  # If we over ran the buffer because of a record with no data write to the first row
+                                    data_group_buffer_array[0, :, :] = np.array(
+                                        data_list[0:max_n_sequences], dtype="float")
+                                    metadata_buffer_array[0, :, :] = np.array(
+                                        metadata_list[0:max_n_sequences], dtype="float")
+                                    id_columns_buffer_array[0, :, :] = np.array(
+                                        id_list[0:max_n_sequences], dtype="S64")
 
                             id_list = list(id_row)
                             data_list = list(data_row)
@@ -685,11 +695,6 @@ def generate_hdf5_file(input_file_json_txt, directory, base_name, max_n_sequence
                 number_of_ids_c = len(id_columns)
                 number_of_data_c = len(data_columns)
 
-                data_list = []
-                id_list = []
-                #
-                # chunk_size = 500
-
                 i = 0
                 for row in csv_reader:
 
@@ -733,13 +738,20 @@ if __name__ == "__main__":
          int(arg_obj.number_of_steps))
 
     """
-    Writing buffers at 37299
+{'i': 6882584, 'row_i': 37401, 'past_row_i': 6882584, 'buffer_start': 37300, 'len_data': 200}
 Traceback (most recent call last):
-  File "package_sequences.py", line 729, in <module>
-    int(arg_obj.number_of_steps))
-  File "package_sequences.py", line 714, in main
-    generate_hdf5_file(input_file_json_txt, directory, base_name, max_n_sequences=number_of_steps)
-  File "package_sequences.py", line 582, in generate_hdf5_file
+  File "package_sequences.py", line 583, in generate_hdf5_file
     data_group_buffer_array[past_row_i - buffer_start, :, :] = np.array(data_list[0:max_n_sequences], dtype="float")
 IndexError: index 100 is out of bounds for axis 0 with size 100
+
+During handling of the above exception, another exception occurred:
+
+Traceback (most recent call last):
+  File "package_sequences.py", line 733, in <module>
+    int(arg_obj.number_of_steps))
+  File "package_sequences.py", line 718, in main
+    generate_hdf5_file(input_file_json_txt, directory, base_name, max_n_sequences=number_of_steps)
+  File "package_sequences.py", line 588, in generate_hdf5_file
+    raise (RuntimeError)
+RuntimeError
     """

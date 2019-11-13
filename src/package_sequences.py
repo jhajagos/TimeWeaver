@@ -486,7 +486,7 @@ def convert_annotations(annotations):
 #
 #
 #
-def replace_generate_hdf5_file(input_file_json_txt, directory, base_name, max_n_sequences=100, compression_method="lzf", buffer_size=500):
+def generate_hdf5_file(input_file_json_txt, directory, base_name, max_n_sequences=100, compression_method="lzf", buffer_size=500):
     """
     HDF5 file layout:
 

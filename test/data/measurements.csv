@@ -8,3 +8,4 @@ encounter_id,measurement_date_time,measurement_code,measurement_desc,measurement
 2,2019-02-20 15:00:02.0,5555-6,blood glucose,265,high
 2,2019-02-20 15:05:10.2,5555-6,blood glucose,250,high
 3,2019-01-20 12:05:06.0,1111-6,creatinine,0.7,normal
+4,2019-04-18 12:05:06.0,1111-6,creatinine,0.7,normal

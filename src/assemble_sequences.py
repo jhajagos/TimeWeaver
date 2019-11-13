@@ -12,7 +12,7 @@ class Assembler(object):
      The main assumption is that all files are sorted by a single key or id.
     """
 
-    def __init__(self, assemble_mapping_config, directory, output_file_name):
+    def __init__(self, assemble_mapping_config, directory, output_file_name, exclude_empty_series=True):
         self.assemble_mapping_config = assemble_mapping_config
         self.directory = directory
         self.output_file_name = output_file_name
@@ -20,6 +20,8 @@ class Assembler(object):
         self.static_primary_config = {}
         self.static_additional_config = {}
         self.dynamic_config = {}
+
+        self.exclude_empty_series = exclude_empty_series
 
         self._initialize()
 
@@ -85,11 +87,12 @@ class Assembler(object):
 
             for static_name in self.static_name_additional:
 
-                if static_name not in static_finished: # Check if we have finished reading the file
+                if static_name not in static_finished:  # Check if we have finished reading the file
 
-                    if class_names_dict_id[static_name] is None: # First time through
+                    if class_names_dict_id[static_name] is None:  # First time through
                         static_block = self.static_dict_block[static_name].__next__()
-                        static_objs = StaticBlockAdditionalProcess(static_block, self.assemble_mapping_config.get_static_class(static_name))
+                        static_objs = StaticBlockAdditionalProcess(static_block,
+                                                                   self.assemble_mapping_config.get_static_class(static_name))
 
                         static_obj_list = []
                         for static_obj in static_objs.process():
@@ -103,7 +106,7 @@ class Assembler(object):
                         else:
                             static_result[static_name] = static_obj_list[0]
 
-                    if class_names_dict_id[static_name] == primary_id: # We have a match
+                    if class_names_dict_id[static_name] == primary_id:  # We have a match
 
                         result_dict["static"][static_name] = static_result[static_name]
                         try:
@@ -123,7 +126,6 @@ class Assembler(object):
                                 static_result[static_name] = static_obj_list[0]
 
                             class_names_dict_id[static_name] = static_id
-
 
                         except StopIteration:
                             static_finished += [static_name]
@@ -151,7 +153,7 @@ class Assembler(object):
                 if class_names_dict_id[dynamic_name] == primary_id: # Match
                     result_dict["dynamic"] += dynamic_result[dynamic_name]
                     try:
-                        dynamic_block =  self.dynamic_dict_block[dynamic_name].__next__()
+                        dynamic_block = self.dynamic_dict_block[dynamic_name].__next__()
                         dynamic_objs = DynamicBlockProcess(dynamic_block,
                                                            self.assemble_mapping_config.get_dynamic_class(dynamic_name))
 
@@ -168,10 +170,13 @@ class Assembler(object):
                     except StopIteration:
                         dynamic_finished += [dynamic_name]
 
-            if len(result_dict["dynamic"]): # Sort every thing into time order
+            if len(result_dict["dynamic"]):  # Sort every thing into time order
                 result_dict["dynamic"].sort(key=lambda x: x["unix_time"])
 
-            self.writer.write(result_dict)
+            if len(result_dict["dynamic"]) > 0:
+                self.writer.write(result_dict)
+            elif not self.exclude_empty_series:
+                self.writer.write(result_dict)
 
         self.writer.close()
         # For other blocks:
@@ -225,7 +230,6 @@ class AssembleMappingConfig(object):
     def get_static_classes(self):
         static_classes = [sc for sc in self.config["static"]]
         return [sc["class"] for sc in static_classes]
-
 
     def get_dynamic_classes(self):
         dynamic_classes = [sc for sc in self.config["dynamic"]]

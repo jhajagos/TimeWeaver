@@ -303,7 +303,6 @@ def scan_file(input_file_json_txt, directory, numeric_compress_functions=["_mean
     histogram_sequence_dict = {}
 
     # Collect distribution of sequence
-
     z = 0
     for data_dict in line_reader_obj:
 
@@ -463,8 +462,31 @@ def generate_csv_files(input_file_json_txt, directory, base_name):
 def convert_annotations(annotations):
     return [u.encode("ascii") for u in annotations]
 
-
-def generate_hdf5_file(input_file_json_txt, directory, base_name, max_n_sequences=100, compression_method="lzf", buffer_size=500):
+# def generate_hdf5_file(input_file_json_txt, directory, base_name, max_n_sequences=100, compression_method="lzf", buffer_size=500):
+#     """
+#         HDF5 file layout:
+#
+#             /dynamic/carry_forward/data/core_array
+#             /dynamic/carry_forward/data/column_annotations
+#
+#             /dynamic/carry_forward/id/core_array "string type"
+#             /dynamic/carry_forward/id/column_annotations
+#
+#             /dynamic/carry_forward/metadata/core_array # numeric Only for dynamic
+#             /dynamic/carry_forward/metadata/column_annotations
+#         """
+#
+#     csv_json_data = os.path.join(directory, "csv_input_data.json")
+#     with open(csv_json_data, mode="r") as f:
+#         csv_data_dict = json.load(f)
+#
+#     # Create an index
+#
+#
+#
+#
+#
+def replace_generate_hdf5_file(input_file_json_txt, directory, base_name, max_n_sequences=100, compression_method="lzf", buffer_size=500):
     """
     HDF5 file layout:
 

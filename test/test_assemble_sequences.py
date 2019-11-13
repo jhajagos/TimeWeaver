@@ -97,7 +97,7 @@ class CSVBlockFileTestCase(unittest.TestCase):
 
         list_block_obj_1 = list(block_obj_1)
 
-        self.assertEqual(3, len(list_block_obj_1))
+        self.assertEqual(4, len(list_block_obj_1))
 
         self.assertEqual(6, len(list_block_obj_1[0]))
 

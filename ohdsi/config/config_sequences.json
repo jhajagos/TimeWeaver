@@ -1,9 +1,11 @@
 {
   "time_window": 3600,
-  "categorical": {"drug_exposure": "cumulative"},
+  "categorical": {"drug_exposure": "cumulative", "measurement_categorical":  "cumulative"},
   "compress": {},
   "static": {
-  "identifier": [["primary", "person_id"]],
-  "independent": [["static", "visit_person", "gender_concept_name"], ["primary", "age_at_visit_start_in_years_int"]],
-  "dependent": [["static", "condition", "condition_concept_name"]]}
+    "identifier": [["primary", "person_id"]],
+    "independent": [["static", "visit_person", "gender_concept_name"], ["primary", "age_at_visit_start_in_years_int"]],
+    "dependent": [["static", "condition", "condition_concept_name"]],
+    "dependent_hierarchy": [["static", "condition_hierarchy", "condition_concept_name"]]
+  }
 }

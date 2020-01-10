@@ -151,6 +151,8 @@ class Assembler(object):
 
                             class_names_dict_id[dynamic_name] = dynamic_id
                             dynamic_result[dynamic_name] = dynamic_list_result
+                        else:
+                            dynamic_result[dynamic_name] = []
 
                 if class_names_dict_id[dynamic_name] == primary_id: # Match
                     result_dict["dynamic"] += dynamic_result[dynamic_name]

@@ -732,22 +732,3 @@ if __name__ == "__main__":
 
     main(arg_obj.input_file_json_txt, arg_obj.command, arg_obj.directory, arg_obj.base_name,
          int(arg_obj.number_of_steps))
-
-    """
-{'i': 6882584, 'row_i': 37401, 'past_row_i': 6882584, 'buffer_start': 37300, 'len_data': 200}
-Traceback (most recent call last):
-  File "package_sequences.py", line 583, in generate_hdf5_file
-    data_group_buffer_array[past_row_i - buffer_start, :, :] = np.array(data_list[0:max_n_sequences], dtype="float")
-IndexError: index 100 is out of bounds for axis 0 with size 100
-
-During handling of the above exception, another exception occurred:
-
-Traceback (most recent call last):
-  File "package_sequences.py", line 733, in <module>
-    int(arg_obj.number_of_steps))
-  File "package_sequences.py", line 718, in main
-    generate_hdf5_file(input_file_json_txt, directory, base_name, max_n_sequences=number_of_steps)
-  File "package_sequences.py", line 588, in generate_hdf5_file
-    raise (RuntimeError)
-RuntimeError
-    """

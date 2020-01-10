@@ -38,10 +38,24 @@
             },
             "type": "additional",
             "field_names": [
-              "condition_concept_name", "condition_concept_code"
+              "condition_concept_name", "condition_concept_id"
             ],
             "field_mappings": {}
-    }],
+    },
+    {
+            "id_field_name": "visit_occurrence_id",
+            "class": "condition_hierarchy",
+            "source": {
+              "type": "csv",
+              "file_name": "map2_condition_occurrence_hierarchy.csv"
+            },
+            "type": "additional",
+            "field_names": [
+              "condition_concept_name", "condition_concept_id"
+            ],
+            "field_mappings": {}
+    }
+  ],
     "dynamic":
           [
             {
@@ -61,22 +75,88 @@
                   "type": "float"
                 },
               "additional_field_names": [
-                 "unit_source_value", "range_low", "range_high", "value_as_concept_name"
+                 "unit_concept_name", "range_low", "range_high", "value_as_concept_name"
               ],
               "additional_field_name_mappings": {},
               "label" :
               {
-                "field_names": ["measurement_concept_id", "measurement_concept_name"],
+                "field_names": ["measurement_concept_id", "measurement_concept_name", "unit_concept_name"],
                 "join_character": "|"
               },
               "filter": {
                 "field_names": [
-                  "measurement_concept_id",
-                  "measurement_concept_name"
+                  "has_value_as_number"
                 ],
-                "values": [
+                "values": ["1"
                 ],
-                "criteria": null
+                "criteria": "or"
+              }
+            },
+            {
+              "class": "measurement_categorical",
+              "date_time": {
+                "field_name": "measurement_datetime",
+                "format": "%Y-%m-%d %H:%M:%S"
+              },
+              "source": {
+                "type": "csv",
+                "file_name": "map2_measurement.csv"
+              },
+              "joining_id_field_name": "visit_occurrence_id",
+              "value":
+                {
+                  "field_name": "value_as_concept_name",
+                  "type": "categorical"
+                },
+              "additional_field_names": [
+              ],
+              "additional_field_name_mappings": {},
+              "label" :
+              {
+                "field_names": ["measurement_concept_id", "measurement_concept_name", "value_as_concept_name"],
+                "join_character": "|"
+              },
+              "filter": {
+                "field_names": [
+                  "has_value_as_concept_only"
+                ],
+                "values": ["1"
+                ],
+                "criteria": "or"
+              }
+            },
+            {
+              "class": "observation",
+              "date_time": {
+                "field_name": "observation_datetime",
+                "format": "%Y-%m-%d %H:%M:%S"
+              },
+              "source": {
+                "type": "csv",
+                "file_name": "map2_observation.csv"
+              },
+              "joining_id_field_name": "visit_occurrence_id",
+              "value":
+                {
+                  "field_name": "value_as_number",
+                  "type": "float"
+                },
+              "additional_field_names": [
+                 "unit_concept_name", "value_as_concept_name"
+              ],
+              "additional_field_name_mappings": {},
+              "label" :
+              {
+                "field_names": ["observation_concept_id", "observation_concept_name", "unit_concept_name"],
+                "join_character": "|"
+              },
+              "filter": {
+                "field_names": [
+                  "has_value_as_number"
+                ],
+                "values": ["1"
+                ],
+                "criteria": "or"
               }
             },
             {

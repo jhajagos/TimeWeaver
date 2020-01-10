@@ -143,12 +143,14 @@ class Assembler(object):
                         dynamic_objs = DynamicBlockProcess(dynamic_block, self.assemble_mapping_config.get_dynamic_class(dynamic_name))
 
                         dynamic_list_result = []
-                        for dynamic_obj in dynamic_objs.process():
-                            dynamic_list_result += [dynamic_obj]
-                        dynamic_id = dynamic_obj["id"]
+                        dynamic_objs_to_process = dynamic_objs.process()
+                        if len(dynamic_objs_to_process):
+                            for dynamic_obj in dynamic_objs.process():
+                                dynamic_list_result += [dynamic_obj]
+                            dynamic_id = dynamic_obj["id"]
 
-                        class_names_dict_id[dynamic_name] = dynamic_id
-                        dynamic_result[dynamic_name] = dynamic_list_result
+                            class_names_dict_id[dynamic_name] = dynamic_id
+                            dynamic_result[dynamic_name] = dynamic_list_result
 
                 if class_names_dict_id[dynamic_name] == primary_id: # Match
                     result_dict["dynamic"] += dynamic_result[dynamic_name]
@@ -424,24 +426,24 @@ class DynamicBlockProcess(Block):
         if self.filter_criteria is None:  # if no filter return
             return True
         else:
-            item_value = []
+            item_values = []
             for field_name in self.filter_field_names:
-                item_value += [item_dict[field_name]]
+                item_values += [item_dict[field_name]]
 
             if self.filter_criteria == "or":
-                if item_value in self.filter_values:
-                    return True
-                else:
-                    return False
+                for item_value in item_values:
+                    if item_value in self.filter_values:
+                        return True
+                return False
 
             elif self.filter_criteria == "not_equal":
-                if item_value in self.filter_values:
-                    return False
-                else:
-                    return True
+                for item_value in item_values:
+                    if item_value in self.filter_values:
+                        return False
+                return True
 
             else:
-                return False # Other criteria
+                return False  # Other criteria
 
     def _process_label(self, row_dict):
         label_list = []

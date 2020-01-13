@@ -68,18 +68,11 @@
               },
               "filter": {
                 "field_names": [
-                  "measurement_code",
-                  "measurement_desc"
+                  "measurement_code"
                 ],
                 "values": [
-                  [
                     "5555-6",
-                    "blood glucose"
-                  ],
-                  [
-                    "1111-6",
-                    "creatine"
-                  ]
+                    "1111-6"
                 ],
                 "criteria": "or"
               }
@@ -105,9 +98,9 @@
                 "join_character": "|"
               },
               "filter": {
-                "field_names": [],
-                "values": [],
-                "criteria": null
+                "field_names": ["medication_code"],
+                "values": ["0"],
+                "criteria": "not_equal"
               },
               "additional_field_names": [],
              "additional_field_name_mappings": {}

@@ -72,6 +72,7 @@ class Assembler(object):
         static_id = None
         dynamic_id = None
 
+        # We start with the primary block
         for primary_block in self.static_dict_block[self.static_name_primary]:
             result_dict = {}
             primary_obj = StaticBlockPrimaryProcess(primary_block, self.primary_config)
@@ -144,17 +145,17 @@ class Assembler(object):
 
                         dynamic_list_result = []
                         dynamic_objs_to_process = dynamic_objs.process()
-                        if len(dynamic_objs_to_process):
-                            for dynamic_obj in dynamic_objs.process():
+
+                        for dynamic_obj in dynamic_objs_to_process:
+                            if dynamic_obj["match"]:
+                                del dynamic_obj["match"]
                                 dynamic_list_result += [dynamic_obj]
-                            dynamic_id = dynamic_obj["id"]
+                        dynamic_id = dynamic_obj["id"]
 
-                            class_names_dict_id[dynamic_name] = dynamic_id
-                            dynamic_result[dynamic_name] = dynamic_list_result
-                        else:
-                            dynamic_result[dynamic_name] = []
+                        class_names_dict_id[dynamic_name] = dynamic_id
+                        dynamic_result[dynamic_name] = dynamic_list_result
 
-                if class_names_dict_id[dynamic_name] == primary_id: # Match
+                if class_names_dict_id[dynamic_name] == primary_id:
                     result_dict["dynamic"] += dynamic_result[dynamic_name]
                     try:
                         dynamic_block = self.dynamic_dict_block[dynamic_name].__next__()
@@ -162,8 +163,12 @@ class Assembler(object):
                                                            self.assemble_mapping_config.get_dynamic_class(dynamic_name))
 
                         dynamic_list_result = []
-                        for dynamic_obj in dynamic_objs.process():
-                            dynamic_list_result += [dynamic_obj]
+                        dynamic_objs_to_process = dynamic_objs.process()
+                        for dynamic_obj in dynamic_objs_to_process:
+                            if dynamic_obj["match"]:
+                                del dynamic_obj["match"]
+                                dynamic_list_result += [dynamic_obj]
+                            #dynamic_list_result += [dynamic_obj]
 
                         dynamic_id = dynamic_obj["id"]
                         class_names_dict_id[dynamic_name] = dynamic_id
@@ -471,21 +476,15 @@ class DynamicBlockProcess(Block):
         list_to_return = []
 
         for item in self.block:
-
-            if self._check_if_matches(item):
-
-                row_dict = self._process_date_time(item)
-                row_dict["id"] = self._process_id(item)
-                row_dict.update(self._process_value(item))
-                row_dict["class"] = self.block_class
-                row_dict["additional_data"] = self._process_fields(item)
-                row_dict.update(self._process_label(item))
-                row_dict.update(self._process_key(row_dict["label_string"]))
-
-                list_to_return += [row_dict]
-
-            else:
-                pass
+            row_dict = self._process_date_time(item)
+            row_dict["match"] = self._check_if_matches(item)
+            row_dict["id"] = self._process_id(item)
+            row_dict.update(self._process_value(item))
+            row_dict["class"] = self.block_class
+            row_dict["additional_data"] = self._process_fields(item)
+            row_dict.update(self._process_label(item))
+            row_dict.update(self._process_key(row_dict["label_string"]))
+            list_to_return += [row_dict]
 
         list_to_return.sort(key=lambda x: x["unix_time"])
         return list_to_return

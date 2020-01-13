@@ -1,3 +1,9 @@
 encounter_id,medication_code,medication_name,administered_date_time
 1,5555,insulin,2019-01-20 18:58:13.0
 1,5555,insulin,2019-01-20 23:50:25.0
+4,0,unmapped,2019-04-18 07:11:01.0
+5,5555,insulin,2019-05-22 06:30:00.0
+5,2222,clindamycin,2019-05-22 06:35:00.0
+7,1212,aspirin,2019-05-22 07:11:01.0
+7,0,unmapped,2019-05-22 07:11:01.0
+7,2343,zofran,2019-05-22 07:12:02.5

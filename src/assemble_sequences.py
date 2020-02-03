@@ -308,10 +308,20 @@ class Block(object):
         date_time_string_value = row_dict[self.date_time_field_name]
         date_time_value = datetime.datetime.strptime(date_time_string_value, self.date_time_format)
 
-        datetime_dict = {
-            "unix_time": date_time_value.timestamp(),
-            "original_date_time_value": date_time_string_value
-        }
+        try:
+            datetime_dict = {
+                "unix_time": date_time_value.timestamp(),
+                "original_date_time_value": date_time_string_value
+            }
+        except OSError:
+
+            delta_difference = datetime.datetime.fromtimestamp(0) - date_time_value
+
+            datetime_dict = {
+                "unix_time": -1 * delta_difference.total_seconds(),
+                "original_date_time_value": date_time_string_value
+            }
+
 
         return datetime_dict
 

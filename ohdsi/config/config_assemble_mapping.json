@@ -221,7 +221,12 @@
                 "field_names": ["atc5_concept_codes_with_descriptions"],
                 "join_character": "|"
                },
-               "filter": null
+               "filter": {"field_names": [
+                  "atc5_concept_codes_with_descriptions"
+                ],
+                "values": [""],
+                "criteria": "not_equal"
+              }
             }
           ]
 }

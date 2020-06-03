@@ -172,35 +172,6 @@
                 "criteria": "or"
               }
             },
-
-            {
-              "class": "drug_exposure",
-              "date_time": {
-                "field_name": "drug_exposure_start_datetime",
-                "format": "%Y-%m-%d %H:%M:%S"
-              },
-              "source": {
-                "type": "csv",
-                "file_name": "map2_drug_exposure.csv"},
-              "joining_id_field_name": "visit_occurrence_id",
-              "value": {
-                "field_name": "drug_concept_id",
-                "type": "categorical"
-               },
-              "additional_field_names": ["stop_reason", "route_source_value", "quantity","dose_unit_source_value"],
-              "additional_field_name_mappings": {},
-              "label": {
-                "field_names": ["drug_concept_id", "drug_concept_name"],
-                "join_character": "|"
-              },
-              "filter": {
-                "field_names": [
-                  "drug_concept_id"
-                ],
-                "values": ["0"],
-                "criteria": "not_equal"
-              }
-             },
             {
               "class": "atc5_drug_exposure",
               "date_time": {

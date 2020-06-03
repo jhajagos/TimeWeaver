@@ -588,7 +588,6 @@ def generate_hdf5_file(input_file_json_txt, directory, base_name, max_n_sequence
                                 # Need to check the gap offset if there is no dynamic data
                                 buffer_overrun = True
 
-
                             if (past_row_i + 1) % buffer_size == 0 and past_row_i > 0:  # Time to write to the buffer
 
                                 b_start = buffers_written * buffer_size

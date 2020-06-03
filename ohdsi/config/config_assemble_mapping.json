@@ -54,6 +54,19 @@
               "condition_concept_name", "condition_concept_id"
             ],
             "field_mappings": {}
+    },
+    {
+            "id_field_name": "visit_occurrence_id",
+            "class": "procedure",
+            "source": {
+              "type": "csv",
+              "file_name": "map2_procedure_occurrence.csv"
+            },
+            "type": "additional",
+            "field_names": [
+              "procedure_concept_name", "procedure_concept_id"
+            ],
+            "field_mappings": {}
     }
   ],
     "dynamic":
@@ -159,6 +172,7 @@
                 "criteria": "or"
               }
             },
+
             {
               "class": "drug_exposure",
               "date_time": {
@@ -186,7 +200,27 @@
                 "values": ["0"],
                 "criteria": "not_equal"
               }
-             }
-
+             },
+            {
+              "class": "atc5_drug_exposure",
+              "date_time": {
+                "field_name": "drug_exposure_start_datetime",
+                "format": "%Y-%m-%d %H:%M:%S"
+              },
+              "source": {
+                "type": "csv",
+                "file_name": "map2_atc5_flattened_drug_exposure.csv"},
+              "joining_id_field_name": "visit_occurrence_id",
+              "value": {
+                "field_name": "atc5_concept_codes_with_descriptions",
+                "type": "categorical"
+              },
+              "additional_field_names": [],
+              "additional_field_name_mappings": {},
+              "label": {
+                "field_names": ["atc5_concept_codes_with_descriptions"],
+                "join_character": "|"
+               }
+            }
           ]
 }

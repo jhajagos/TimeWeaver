@@ -67,6 +67,19 @@
               "procedure_concept_name", "procedure_concept_id"
             ],
             "field_mappings": {}
+    },
+    {
+            "id_field_name": "visit_occurrence_id",
+            "class": "death",
+            "source": {
+              "type": "csv",
+              "file_name": "map2_death_visit_occurrence.csv"
+            },
+            "type": "additional",
+            "field_names": [
+              "death_type_concept_id", "death_type_concept_id"
+            ],
+            "field_mappings": {}
     }
   ],
     "dynamic":

@@ -1,13 +1,55 @@
 {
   "time_window": 3600,
-  "categorical": {"atc5_drug_exposure": "cumulative", "measurement_categorical":  "cumulative"},
+  "categorical": {
+    "atc5_drug_exposure": "cumulative",
+    "measurement_categorical": "cumulative"
+  },
   "compress": {},
   "static": {
-    "identifier": [["primary", "person_id"]],
-    "independent": [["static", "visit_person", "gender_concept_name"], ["primary", "age_at_visit_start_in_years_int"]],
-    "condition": [["static", "condition", "condition_concept_name"]],
-    "condition_hierarchy": [["static", "condition_hierarchy", "condition_concept_name"]],
-    "procedure": [["static", "procedure", "procedure_concept_name"]],
-    "death": [["static", "death", "death_type_concept_id"]]
+    "identifier": [
+      [
+        "primary",
+        "person_id"
+      ]
+    ],
+    "independent": [
+      [
+        "static",
+        "visit_person",
+        "gender_concept_name"
+      ],
+      [
+        "primary",
+        "age_at_visit_start_in_years_int"
+      ]
+    ],
+    "condition": [
+      [
+        "static",
+        "condition",
+        "condition_concept_name"
+      ]
+    ],
+    "condition_hierarchy": [
+      [
+        "static",
+        "condition_hierarchy",
+        "condition_concept_name"
+      ]
+    ],
+    "procedure": [
+      [
+        "static",
+        "procedure",
+        "procedure_concept_name"
+      ]
+    ],
+    "death": [
+      [
+        "static",
+        "death",
+        "death_type_concept_id"
+      ]
+    ]
   }
 }

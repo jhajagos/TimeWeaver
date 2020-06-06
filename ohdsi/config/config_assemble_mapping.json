@@ -77,7 +77,7 @@
             },
             "type": "additional",
             "field_names": [
-              "death_type_concept_id", "death_type_concept_id"
+              "death_type_concept_id"
             ],
             "field_mappings": {}
     }

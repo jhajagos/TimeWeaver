@@ -8,6 +8,6 @@
     "condition": [["static", "condition", "condition_concept_name"]],
     "condition_hierarchy": [["static", "condition_hierarchy", "condition_concept_name"]],
     "procedure": [["static", "procedure", "procedure_concept_name"]],
-    "death": [["static", "death", "death_concept_name"]]
+    "death": [["static", "death", "death_type_concept_id"]]
   }
 }

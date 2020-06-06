@@ -37,6 +37,17 @@
               "type": "additional",
               "field_names": ["diagnosis_class","diagnosis_code", "diagnosis_desc"],
               "field_mappings": {}
+            },
+            {
+              "id_field_name": "encounter_id",
+              "class": "death",
+              "source": {
+                "type": "csv",
+                "file_name": "death.csv"
+              },
+              "type": "additional",
+              "field_names": ["death_type_name"],
+              "field_mappings": {}
             }
           ],
   "dynamic":

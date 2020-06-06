@@ -91,21 +91,27 @@ class Assembler(object):
                 if static_name not in static_finished:  # Check if we have finished reading the file
 
                     if class_names_dict_id[static_name] is None:  # First time through
-                        static_block = self.static_dict_block[static_name].__next__()
-                        static_objs = StaticBlockAdditionalProcess(static_block,
-                                                                   self.assemble_mapping_config.get_static_class(static_name))
+                        try:
+                            static_block = next(self.static_dict_block[static_name])
+                            empty_file = False
+                        except StopIteration:
+                            empty_file = True
 
-                        static_obj_list = []
-                        for static_obj in static_objs.process():
-                            static_obj_list += [static_obj]
+                        if not empty_file:
+                            static_objs = StaticBlockAdditionalProcess(static_block,
+                                                                       self.assemble_mapping_config.get_static_class(static_name))
 
-                        static_id = static_obj["id"]
-                        class_names_dict_id[static_name] = static_id
+                            static_obj_list = []
+                            for static_obj in static_objs.process():
+                                static_obj_list += [static_obj]
 
-                        if len(static_obj_list) > 1:
-                            static_result[static_name] = static_obj_list
-                        else:
-                            static_result[static_name] = static_obj_list[0]
+                            static_id = static_obj["id"]
+                            class_names_dict_id[static_name] = static_id
+
+                            if len(static_obj_list) > 1:
+                                static_result[static_name] = static_obj_list
+                            else:
+                                static_result[static_name] = static_obj_list[0]
 
                     if class_names_dict_id[static_name] == primary_id:  # We have a match
 

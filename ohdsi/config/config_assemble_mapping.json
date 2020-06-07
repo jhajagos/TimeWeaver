@@ -109,13 +109,12 @@
                 "field_names": ["measurement_concept_id", "measurement_concept_name", "unit_concept_name"],
                 "join_character": "|"
               },
-              "filter": {
+             "filter": {
                 "field_names": [
-                  "has_value_as_number"
+                  "measurement_concept_id"
                 ],
-                "values": ["1"
-                ],
-                "criteria": "or"
+                "values": ["0"],
+                "criteria": "not_equal"
               }
             },
             {
@@ -144,11 +143,10 @@
               },
               "filter": {
                 "field_names": [
-                  "has_value_as_concept_only"
+                  "measurement_concept_id"
                 ],
-                "values": ["1"
-                ],
-                "criteria": "or"
+                "values": ["0"],
+                "criteria": "not_equal"
               }
             },
             {
@@ -178,11 +176,10 @@
               },
               "filter": {
                 "field_names": [
-                  "has_value_as_number"
+                  "observation_concept_id"
                 ],
-                "values": ["1"
-                ],
-                "criteria": "or"
+                "values": ["0"],
+                "criteria": "not_equal"
               }
             },
             {
